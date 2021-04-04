@@ -1,0 +1,3481 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Tidy, feature-complete web framework">
+  <title>
+   Dream
+  </title>
+  <link href="docs.css" rel="stylesheet">
+  <script src="docs.js"></script>
+  <script src="highlight.pack.js"></script>
+  <script>
+   hljs.highlightAll();
+  </script>
+ </head>
+ <body class="index">
+  <header>
+   <div class="topmost">
+    <div class="titles">
+     <h1>
+      Dream
+     </h1>
+     <h6>
+      Tidy Web framework for OCaml and ReasonML
+     </h6>
+    </div>
+    <ul>
+     <li>
+      <code>1.0.0~alpha1</code>
+     </li>
+     <li>
+      <code>opam install dream</code>
+     </li>
+     <li>
+      <a href="https://github.com/aantron/dream">GitHub</a>
+     </li>
+     <li>
+      <a href="https://github.com/aantron/dream/blob/master/src/dream.mli">Edit these docs</a>
+     </li>
+    </ul>
+   </div>
+   <pre><span class="keyword">let</span> hello who =
+  <span class="hljs-tag">&lt;html&gt;</span>
+    <span class="hljs-tag">&lt;body&gt;</span>
+      <span class="hljs-tag">&lt;h1&gt;</span><span class="hljs-string">Hello, </span><span class="hljs-keyword">&lt;%s</span> who <span class="hljs-keyword">%&gt;</span><span class="hljs-string">!</span><span class="hljs-tag">&lt;/h1&gt;</span>
+    <span class="hljs-tag">&lt;/body&gt;</span>
+  <span class="hljs-tag">&lt;/html&gt;</span>
+
+<span class="keyword">let</span> <span class="hljs-string">()</span> =
+  <span class="hljs-type">Dream</span>.run
+  @@ <span class="hljs-type">Dream</span>.logger
+  @@ <span class="hljs-type">Dream</span>.router <span class="hljs-string">[</span>
+    <span class="hljs-type">Dream</span>.get <span class="hljs-string">"/"</span> (<span class="keyword">fun</span> _ -&gt;
+      <span class="hljs-type">Dream</span>.html (hello <span class="hljs-string">"world"</span>));
+  <span class="hljs-string">]</span>
+  @@ <span class="hljs-type">Dream</span>.not_found</pre>
+   <div class="blurbs">
+    <p>
+     <span class="title"><strong>Dream</strong></span> is an easy-to-use,
+      boilerplate-free Web framework, whose entire
+      <a href="#types">API</a> fits on this page!
+    </p>
+    <p>
+     It supports <a href="#servers">TLS</a>,
+      <a href="#websockets">WebSockets</a>, and <a href="#graphql">GraphQL</a>.
+      HTTP/2 support is <a href="#servers">transparent</a>. It also includes:
+    </p>
+    <ul>
+     <li>
+      a nice <a href="#logging">log</a> and OCaml runtime configuration;
+     </li>
+     <li>
+      easy-to-use, secure helpers for round-tripping
+        <a href="#cookies">cookies</a> and <a href="#forms">forms</a>;
+     </li>
+     <li>
+      <a href="#templates">templates</a> that interleave OCaml with
+        already-familiar HTML;
+     </li>
+     <li>
+      a fully composable <a href="#routing">router</a>;
+     </li>
+     <li>
+      <a href="#sessions">session management</a> with pluggable
+        <a href="#back-ends">back ends</a>; and
+     </li>
+     <li>
+      unified <a href="#errors">error handling</a> that leaks no English
+        strings from any level of your app.
+     </li>
+    </ul>
+    <p>
+     You can integrate Dream into a fully self-contained binary, or run it in
+      large deployments behind proxies. Dream assumes no databases, environment
+      variables, or configuration files, and requires no setup beyond installing
+      the one package, <code>dream</code>.
+    </p>
+    <p>
+     Dream sticks to base OCaml types as much as possible, introducing only a
+      few <a href="#types">types</a> of its own. Dream handlers and middlewares
+      are just bare functions. Dream has a flat namespace and aims for maximal
+      clarity.
+    </p>
+    <p>
+     This page is the API documentation, but Dream also has:
+    </p>
+    <ul>
+     <li>
+      A <a href="https://github.com/aantron/dream/tree/master/example#readme">
+        Tutorial</a> — get started at
+        <a href="https://github.com/aantron/dream/tree/master/example/1-hello#files">
+        <code>1-hello</code></a>!
+     </li>
+     <li>
+      Many <a href="https://github.com/aantron/dream/tree/master/example#reason">
+        Examples</a>, covering all kinds of scenarios.
+     </li>
+    </ul>
+   </div>
+  </header>
+  <div class="odoc-content">
+   <div class="background"></div>
+   <nav class="odoc-toc">
+    <ul>
+     <li>
+      <a href="#types">Types</a>
+     </li>
+     <li>
+      <a href="#methods">Methods</a>
+     </li>
+     <li>
+      <a href="#status_codes">Status codes</a>
+     </li>
+     <li>
+      <a href="#requests">Requests</a>
+     </li>
+     <li>
+      <a href="#responses">Responses</a>
+     </li>
+     <li>
+      <a href="#headers">Headers</a>
+     </li>
+     <li>
+      <a href="#cookies">Cookies</a>
+     </li>
+     <li>
+      <a href="#bodies">Bodies</a>
+     </li>
+     <li>
+      <a href="#json">JSON</a>
+     </li>
+     <li>
+      <a href="#forms">Forms</a>
+     </li>
+     <li>
+      <a href="#templates">Templates</a>
+     </li>
+     <li>
+      <a href="#middleware">Middleware</a>
+     </li>
+     <li>
+      <a href="#routing">Routing</a>
+     </li>
+     <li>
+      <a href="#sessions">Sessions</a>
+     </li>
+     <li>
+      <a href="#websockets">WebSockets</a>
+     </li>
+     <li>
+      <a href="#graphql">GraphQL</a>
+     </li>
+     <li>
+      <a href="#sql">SQL</a>
+     </li>
+     <li>
+      <a href="#logging">Logging</a>
+     </li>
+     <li>
+      <a href="#errors">Errors</a>
+     </li>
+     <li>
+      <a href="#servers">Servers</a>
+     </li>
+     <li>
+      <a href="#web_formats">Web formats</a>
+     </li>
+     <li>
+      <a href="#cryptography">Cryptography</a>
+     </li>
+     <li>
+      <a href="#variables">Variables</a>
+     </li>
+     <li>
+      <a href="#testing">Testing</a>
+     </li>
+    </ul>
+   </nav>
+   <h2 id="types">
+    <div class="backing"></div>
+    <a href="#types" class="anchor"></a>Types
+   </h2>
+   <p>
+    Dream is built on just five types. The first two are the data types of Dream. Both are abstract, even though they appear to have definitions:
+   </p>
+   <div class="odoc-spec">
+    <div class="spec type" id="type-request">
+     <div class="backing"></div>
+     <a href="#type-request" class="anchor"></a><code><span><span class="keyword">type</span> request</span><span> = <span><a href="#type-incoming">incoming</a> <a href="#type-message">message</a></span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      HTTP requests, such as <code>GET /something HTTP/1.1</code>. See <a href="#requests">Requests</a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec type" id="type-response">
+     <div class="backing"></div>
+     <a href="#type-response" class="anchor"></a><code><span><span class="keyword">and</span> response</span><span> = <span><a href="#type-outgoing">outgoing</a> <a href="#type-message">message</a></span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      HTTP responses, such as <code>200 OK</code>. See <a href="#responses">Responses</a>.
+     </p>
+    </div>
+   </div>
+   <p>
+    The remaining three types are for building up Web apps.
+   </p>
+   <div class="odoc-spec">
+    <div class="spec type" id="type-handler">
+     <div class="backing"></div>
+     <a href="#type-handler" class="anchor"></a><code><span><span class="keyword">and</span> handler</span><span> = <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> <span><a href="#type-response">response</a> <a href="#type-promise">promise</a></span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Handlers are asynchronous functions from requests to responses. Example <a href="https://github.com/aantron/dream/tree/master/example/1-hello#files"><code>1-hello</code></a> shows the simplest handler, an anonymous function which we pass to <a href="#val-run"><code>Dream.run</code></a>. This creates a complete Web server! You can also see the Reason version in example <a href="https://github.com/aantron/dream/tree/master/example/r-hello#files"><code>r-hello</code></a>.
+     </p>
+     <pre><code>let () =
+  Dream.run (fun _ -&gt;
+    Dream.html "Good morning, world!")</code></pre>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec type" id="type-middleware">
+     <div class="backing"></div>
+     <a href="#type-middleware" class="anchor"></a><code><span><span class="keyword">and</span> middleware</span><span> = <span><a href="#type-handler">handler</a> <span class="arrow">-&gt;</span></span> <a href="#type-handler">handler</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Middlewares are functions that take a <a href="#type-handler"><code>handler</code></a>, and run some code before or after — producing a “bigger” handler. Example <a href="https://github.com/aantron/dream/tree/master/example/2-middleware#files"><code>2-middleware</code></a> inserts the <a href="#val-logger"><code>Dream.logger</code></a> middleware into a Web app:
+     </p>
+     <pre><code>let () =
+  Dream.run
+  @@ Dream.logger
+  @@ fun _ -&gt; Dream.html "Good morning, world!"</code></pre>
+     <p>
+      Examples <a href="https://github.com/aantron/dream/tree/master/example/4-counter#files"><code>4-counter</code></a> and <a href="https://github.com/aantron/dream/tree/master/example/5-promise#files"><code>5-promise</code></a> show user-defined middlewares:
+     </p>
+     <pre><code>let count_requests inner_handler request =
+  count := !count + 1;
+  inner_handler request</code></pre>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec type" id="type-route">
+     <div class="backing"></div>
+     <a href="#type-route" class="anchor"></a><code><span><span class="keyword">and</span> route</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Routes tell <a href="#val-router"><code>Dream.router</code></a> which handler to select for each request. See <a href="#routing">Routing</a> and example <a href="https://github.com/aantron/dream/tree/master/example/3-router#files"><code>3-router</code></a>. Routes are created by helpers such as <a href="#val-get"><code>Dream.get</code></a> and <a href="#val-scope"><code>Dream.scope</code></a>:
+     </p>
+     <pre><code>Dream.router [
+  Dream.scope "/admin" [Dream.memory_sessions] [
+    Dream.get "/" admin_handler;
+    Dream.get "/logout" admin_logout_handler;
+  ];
+]</code></pre>
+     <p>
+      The three handler-related types have a vaguely algebraic interpretation:
+     </p>
+     <ul>
+      <li>
+       Literal handlers are atoms.
+      </li>
+      <li>
+       <a href="#type-middleware"><code>middleware</code></a> is for sequential composition (product-like).
+      </li>
+      <li>
+       <a href="#type-route"><code>route</code></a> is for alternative composition (sum-like).
+      </li>
+     </ul>
+     <p>
+      <a href="#val-scope"><code>Dream.scope</code></a> implements a distributive law.
+     </p>
+    </div>
+   </div>
+   <h3 id="helpers">
+    <div class="backing"></div>
+    <a href="#helpers" class="anchor"></a>Helpers
+   </h3>
+   <div class="odoc-spec">
+    <div class="spec type" id="type-message">
+     <div class="backing"></div>
+     <a href="#type-message" class="anchor"></a><code><span><span class="keyword">and</span> <span>'a message</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      <code>'a message</code>, pronounced “any message,” allows some functions to take either <a href="#type-request"><code>request</code></a> or <a href="#type-response"><code>response</code></a> as arguments, because both are defined in terms of <code>'a message</code>. For example, in <a href="#headers">Headers</a>:
+     </p>
+     <pre><code>val Dream.header : string -&gt; 'a message -&gt; string option</code></pre>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec type" id="type-incoming">
+     <div class="backing"></div>
+     <a href="#type-incoming" class="anchor"></a><code><span><span class="keyword">and</span> incoming</span></code>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec type" id="type-outgoing">
+     <div class="backing"></div>
+     <a href="#type-outgoing" class="anchor"></a><code><span><span class="keyword">and</span> outgoing</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Type parameters for <a href="#type-message"><code>message</code></a> for <a href="#type-request"><code>request</code></a> and <a href="#type-response"><code>response</code></a>, respectively. These are “phantom” types. They have no meaning other than they are different from each other. Dream only ever creates <code>incoming
+    message</code> and <code>outgoing message</code>. <code>incoming</code> and <code>outgoing</code> are never mentioned again in the docs.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec type" id="type-promise">
+     <div class="backing"></div>
+     <a href="#type-promise" class="anchor"></a><code><span><span class="keyword">and</span> <span>'a promise</span></span><span> = <span><span class="type-var">'a</span> <span class="xref-unresolved">Lwt</span>.t</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Dream uses <a href="https://github.com/ocsigen/lwt">Lwt</a> for promises and asynchronous I/O. See example <a href="https://github.com/aantron/dream/tree/master/example/5-promise#files"><code>5-promise</code></a>.
+     </p>
+    </div>
+   </div>
+   <h2 id="methods">
+    <div class="backing"></div>
+    <a href="#methods" class="anchor"></a>Methods
+   </h2>
+   <div class="odoc-spec">
+    <div class="multiline spec type" id="type-method_">
+     <div class="backing"></div>
+     <a href="#type-method_" class="anchor"></a>
+<pre class="compact"><span class="keyword">type</span> method_ = [
+  | `GET
+  | `POST
+  | `PUT
+  | `DELETE
+  | `HEAD
+  | `CONNECT
+  | `OPTIONS
+  | `TRACE
+  | `PATCH
+  | `Method <span class="of">of</span> string
+]
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      HTTP request methods. See <a href="https://tools.ietf.org/html/rfc7231#section-4.3">RFC 7231 §4.2</a>, <a href="https://tools.ietf.org/html/rfc5789#page-2">RFC 5789 §2</a>, and <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods">MDN</a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-method_to_string">
+     <div class="backing"></div>
+     <a href="#val-method_to_string" class="anchor"></a><code><span><span class="keyword">val</span> method_to_string : <span><a href="#type-method_">method_</a> <span class="arrow">-&gt;</span></span> string</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Evaluates to a string representation of the given method. For example, <code>`GET</code> is converted to <code>"GET"</code>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-string_to_method">
+     <div class="backing"></div>
+     <a href="#val-string_to_method" class="anchor"></a><code><span><span class="keyword">val</span> string_to_method : <span>string <span class="arrow">-&gt;</span></span> <a href="#type-method_">method_</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Evaluates to the <a href="#type-method_"><code>method_</code></a> corresponding to the given method string.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-methods_equal">
+     <div class="backing"></div>
+     <a href="#val-methods_equal" class="anchor"></a><code><span><span class="keyword">val</span> methods_equal : <span><a href="#type-method_">method_</a> <span class="arrow">-&gt;</span></span> <span><a href="#type-method_">method_</a> <span class="arrow">-&gt;</span></span> bool</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Compares two methods, such that equal methods are detected even if one is represented as a string. For example,
+     </p>
+     <pre><code>Dream.methods_equal `GET (`Method "GET") = true</code></pre>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-normalize_method">
+     <div class="backing"></div>
+     <a href="#val-normalize_method" class="anchor"></a><code><span><span class="keyword">val</span> normalize_method : <span><a href="#type-method_">method_</a> <span class="arrow">-&gt;</span></span> <a href="#type-method_">method_</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Converts methods represented as strings to variants. Methods generated by Dream are always normalized.
+     </p>
+     <pre><code>Dream.normalize_method (`Method "GET") = `GET</code></pre>
+    </div>
+   </div>
+   <h2 id="status_codes">
+    <div class="backing"></div>
+    <a href="#status_codes" class="anchor"></a>Status codes
+   </h2>
+   <div class="odoc-spec">
+    <div class="multiline spec type" id="type-informational">
+     <div class="backing"></div>
+     <a href="#type-informational" class="anchor"></a>
+<pre class="compact"><span class="keyword">type</span> informational = [
+  | `Continue
+  | `Switching_Protocols
+]
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Informational (<code>1xx</code>) status codes. See <a href="https://tools.ietf.org/html/rfc7231#section-6.2">RFC 7231 §6.2</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#information_responses">MDN</a>. <code>101 Switching Protocols</code> is generated internally by <a href="#val-websocket"><code>Dream.websocket</code></a>. It is usually not necessary to use it directly.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec type" id="type-successful">
+     <div class="backing"></div>
+     <a href="#type-successful" class="anchor"></a>
+<pre class="compact"><span class="keyword">type</span> successful = [
+  | `OK
+  | `Created
+  | `Accepted
+  | `Non_Authoritative_Information
+  | `No_Content
+  | `Reset_Content
+  | `Partial_Content
+]</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Successful (<code>2xx</code>) status codes. See <a href="https://tools.ietf.org/html/rfc7231#section-6.3">RFC 7231 §6.3</a>, <a href="https://tools.ietf.org/html/rfc7233#section-4.1">RFC 7233 §4.1</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#successful_responses">MDN</a>. The most common is <code>200 OK</code>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec type" id="type-redirection">
+     <div class="backing"></div>
+     <a href="#type-redirection" class="anchor"></a>
+<pre class="compact"><span class="keyword">type</span> redirection = [
+  | `Multiple_Choices
+  | `Moved_Permanently
+  | `Found
+  | `See_Other
+  | `Not_Modified
+  | `Temporary_Redirect
+  | `Permanent_Redirect
+]</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Redirection (<code>3xx</code>) status codes. See <a href="https://tools.ietf.org/html/rfc7231#section-6.4">RFC 7231 §6.4</a> and <a href="https://tools.ietf.org/html/rfc7538#section-3">RFC 7538 §3</a>, and <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages">MDN</a>. Use <code>303 See Other</code> to direct clients to follow up with a <code>GET</code> request, especially after a form submission. Use <code>301 Moved Permanently</code> for permanent redirections.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec type" id="type-client_error">
+     <div class="backing"></div>
+     <a href="#type-client_error" class="anchor"></a>
+<pre class="compact"><span class="keyword">type</span> client_error = [
+  | `Bad_Request
+  | `Unauthorized
+  | `Payment_Required
+  | `Forbidden
+  | `Not_Found
+  | `Method_Not_Allowed
+  | `Not_Acceptable
+  | `Proxy_Authentication_Required
+  | `Request_Timeout
+  | `Conflict
+  | `Gone
+  | `Length_Required
+  | `Precondition_Failed
+  | `Payload_Too_Large
+  | `URI_Too_Long
+  | `Unsupported_Media_Type
+  | `Range_Not_Satisfiable
+  | `Expectation_Failed
+  | `Misdirected_Request
+  | `Too_Early
+  | `Upgrade_Required
+  | `Precondition_Required
+  | `Too_Many_Requests
+  | `Request_Header_Fields_Too_Large
+  | `Unavailable_For_Legal_Reasons
+]</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Client error (<code>4xx</code>) status codes. The most common are <code>400 Bad Request</code>, <code>401 Unauthorized</code>, <code>403 Forbidden</code>, and, of course, <code>404 Not Found</code>.
+     </p>
+     <p>
+      See <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses">MDN</a>, and
+     </p>
+     <ul>
+      <li>
+       <a href="https://tools.ietf.org/html/rfc7231#section-6.5">RFC 7231 §6.5</a> for most client error status codes.
+      </li>
+      <li>
+       <a href="https://tools.ietf.org/html/rfc7233#section-4.4">RFC 7233 §4.4</a> for <code>416 Range Not Satisfiable</code>.
+      </li>
+      <li>
+       <a href="https://tools.ietf.org/html/rfc7540#section-9.1.2">RFC 7540 §9.1.2</a> for <code>421 Misdirected Request</code>.
+      </li>
+      <li>
+       <a href="https://tools.ietf.org/html/rfc8470#section-5.2">RFC 8470 §5.2</a> for <code>425 Too Early</code>.
+      </li>
+      <li>
+       <a href="https://tools.ietf.org/html/rfc6585">RFC 6585</a> for <code>428 Precondition Required</code>, <code>429 Too Many Requests</code>, and <code>431 Request
+      Headers Too Large</code>.
+      </li>
+      <li>
+       <a href="https://tools.ietf.org/html/rfc7725">RFC 7725</a> for <code>451 Unavailable For Legal Reasons</code>.
+      </li>
+     </ul>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec type" id="type-server_error">
+     <div class="backing"></div>
+     <a href="#type-server_error" class="anchor"></a>
+<pre class="compact"><span class="keyword">type</span> server_error = [
+  | `Internal_Server_Error
+  | `Not_Implemented
+  | `Bad_Gateway
+  | `Service_Unavailable
+  | `Gateway_Timeout
+  | `HTTP_Version_Not_Supported
+]</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Server error (<code>5xx</code>) status codes. See <a href="https://tools.ietf.org/html/rfc7231#section-6.6">RFC 7231 §6.6</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#server_error_responses">MDN</a>. The most common of these is <code>500 Internal Server Error</code>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec type" id="type-standard_status">
+     <div class="backing"></div>
+     <a href="#type-standard_status" class="anchor"></a>
+<pre class="compact"><span class="keyword">type</span> standard_status = [
+  | <a href="#type-informational">informational</a>
+  | <a href="#type-successful">successful</a>
+  | <a href="#type-redirection">redirection</a>
+  | <a href="#type-client_error">client_error</a>
+  | <a href="#type-server_error">server_error</a>
+]</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Sum of all the status codes declared above.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec type" id="type-status">
+     <div class="backing"></div>
+     <a href="#type-status" class="anchor"></a>
+<pre class="compact"><span class="keyword">type</span> status = [
+  | <a href="#type-standard_status">standard_status</a>
+  | `Status <span class="of">of</span> int
+]</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Status codes, including codes directly represented as integers. See the types above for the full list and references.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-status_to_string">
+     <div class="backing"></div>
+     <a href="#val-status_to_string" class="anchor"></a><code><span><span class="keyword">val</span> status_to_string : <span><a href="#type-status">status</a> <span class="arrow">-&gt;</span></span> string</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Evaluates to a string representation of the given status. For example, <code>`Not_Found</code> and <code>`Status 404</code> are both converted to <code>"Not Found"</code>. Numbers are used for unknown status codes. For example, <code>`Status 567</code> is converted to <code>"567"</code>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-status_to_reason">
+     <div class="backing"></div>
+     <a href="#val-status_to_reason" class="anchor"></a><code><span><span class="keyword">val</span> status_to_reason : <span><a href="#type-status">status</a> <span class="arrow">-&gt;</span></span> <span>string option</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Converts known status codes to their string representations. Evaluates to <code>None</code> for unknown status codes.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-status_to_int">
+     <div class="backing"></div>
+     <a href="#val-status_to_int" class="anchor"></a><code><span><span class="keyword">val</span> status_to_int : <span><a href="#type-status">status</a> <span class="arrow">-&gt;</span></span> int</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Evaluates to the numeric value of the given status code.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-int_to_status">
+     <div class="backing"></div>
+     <a href="#val-int_to_status" class="anchor"></a><code><span><span class="keyword">val</span> int_to_status : <span>int <span class="arrow">-&gt;</span></span> <a href="#type-status">status</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Evaluates to the symbolic representation of the status code with the given number.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-is_informational">
+     <div class="backing"></div>
+     <a href="#val-is_informational" class="anchor"></a><code><span><span class="keyword">val</span> is_informational : <span><a href="#type-status">status</a> <span class="arrow">-&gt;</span></span> bool</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Evaluates to <code>true</code> if the given status is either from type <a href="#type-informational"><code>Dream.informational</code></a>, or is in the range <code>`Status 100</code> — <code>`Status 199</code>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-is_successful">
+     <div class="backing"></div>
+     <a href="#val-is_successful" class="anchor"></a><code><span><span class="keyword">val</span> is_successful : <span><a href="#type-status">status</a> <span class="arrow">-&gt;</span></span> bool</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Like <a href="#val-is_informational"><code>Dream.is_informational</code></a>, but for type <a href="#type-successful"><code>Dream.successful</code></a> and numeric codes <code>2xx</code>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-is_redirection">
+     <div class="backing"></div>
+     <a href="#val-is_redirection" class="anchor"></a><code><span><span class="keyword">val</span> is_redirection : <span><a href="#type-status">status</a> <span class="arrow">-&gt;</span></span> bool</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Like <a href="#val-is_informational"><code>Dream.is_informational</code></a>, but for type <a href="#type-redirection"><code>Dream.redirection</code></a> and numeric codes <code>3xx</code>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-is_client_error">
+     <div class="backing"></div>
+     <a href="#val-is_client_error" class="anchor"></a><code><span><span class="keyword">val</span> is_client_error : <span><a href="#type-status">status</a> <span class="arrow">-&gt;</span></span> bool</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Like <a href="#val-is_informational"><code>Dream.is_informational</code></a>, but for type <a href="#type-client_error"><code>Dream.client_error</code></a> and numeric codes <code>4xx</code>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-is_server_error">
+     <div class="backing"></div>
+     <a href="#val-is_server_error" class="anchor"></a><code><span><span class="keyword">val</span> is_server_error : <span><a href="#type-status">status</a> <span class="arrow">-&gt;</span></span> bool</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Like <a href="#val-is_informational"><code>Dream.is_informational</code></a>, but for type <a href="#type-server_error"><code>Dream.server_error</code></a> and numeric codes <code>5xx</code>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-status_codes_equal">
+     <div class="backing"></div>
+     <a href="#val-status_codes_equal" class="anchor"></a><code><span><span class="keyword">val</span> status_codes_equal : <span><a href="#type-status">status</a> <span class="arrow">-&gt;</span></span> <span><a href="#type-status">status</a> <span class="arrow">-&gt;</span></span> bool</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Compares two status codes, such that equal codes are detected even if one is represented as a number. For example,
+     </p>
+     <pre><code>Dream.status_codes_equal `Not_Found (`Status 404) = true</code></pre>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-normalize_status">
+     <div class="backing"></div>
+     <a href="#val-normalize_status" class="anchor"></a><code><span><span class="keyword">val</span> normalize_status : <span><a href="#type-status">status</a> <span class="arrow">-&gt;</span></span> <a href="#type-status">status</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Converts status codes represented as numbers to variants. Status codes generated by Dream are always normalized.
+     </p>
+     <pre><code>Dream.normalize_status (`Status 404) = `Not_Found</code></pre>
+    </div>
+   </div>
+   <h2 id="requests">
+    <div class="backing"></div>
+    <a href="#requests" class="anchor"></a>Requests
+   </h2>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-client">
+     <div class="backing"></div>
+     <a href="#val-client" class="anchor"></a><code><span><span class="keyword">val</span> client : <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> string</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Client sending the request. For example, <code>"127.0.0.1:56001"</code>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-https">
+     <div class="backing"></div>
+     <a href="#val-https" class="anchor"></a><code><span><span class="keyword">val</span> https : <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> bool</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Whether the request was sent over HTTPS.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-method_">
+     <div class="backing"></div>
+     <a href="#val-method_" class="anchor"></a><code><span><span class="keyword">val</span> method_ : <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> <a href="#type-method_">method_</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Request method. For example, <code>`GET</code>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-target">
+     <div class="backing"></div>
+     <a href="#val-target" class="anchor"></a><code><span><span class="keyword">val</span> target : <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> string</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Request target. For example, <code>"/foo/bar"</code>. See <a href="#val-path"><code>Dream.path</code></a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-path">
+     <div class="backing"></div>
+     <a href="#val-path" class="anchor"></a><code><span><span class="keyword">val</span> path : <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> <span>string list</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Parsed request path. For example, <code>"foo"; "bar"</code>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-version">
+     <div class="backing"></div>
+     <a href="#val-version" class="anchor"></a><code><span><span class="keyword">val</span> version : <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> int * int</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Protocol version. <code>(1, 1)</code> for HTTP/1.1 and <code>(2, 0)</code> for HTTP/2.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-with_client">
+     <div class="backing"></div>
+     <a href="#val-with_client" class="anchor"></a><code><span><span class="keyword">val</span> with_client : <span>string <span class="arrow">-&gt;</span></span> <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> <a href="#type-request">request</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Replaces the client. See <a href="#val-client"><code>Dream.client</code></a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-with_method_">
+     <div class="backing"></div>
+     <a href="#val-with_method_" class="anchor"></a><code><span><span class="keyword">val</span> with_method_ : <span><a href="#type-method_">method_</a> <span class="arrow">-&gt;</span></span> <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> <a href="#type-request">request</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Replaces the method. See <a href="#type-method_"><code>Dream.method_</code></a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-with_path">
+     <div class="backing"></div>
+     <a href="#val-with_path" class="anchor"></a><code><span><span class="keyword">val</span> with_path : <span><span>string list</span> <span class="arrow">-&gt;</span></span> <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> <a href="#type-request">request</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Replaces the path. See <a href="#val-path"><code>Dream.path</code></a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-with_version">
+     <div class="backing"></div>
+     <a href="#val-with_version" class="anchor"></a><code><span><span class="keyword">val</span> with_version : <span><span>(int * int)</span> <span class="arrow">-&gt;</span></span> <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> <a href="#type-request">request</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Replaces the version. See <a href="#val-version"><code>Dream.version</code></a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-query">
+     <div class="backing"></div>
+     <a href="#val-query" class="anchor"></a><code><span><span class="keyword">val</span> query : <span>string <span class="arrow">-&gt;</span></span> <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> <span>string option</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      First query parameter with the given name. See <a href="https://tools.ietf.org/html/rfc3986#section-3.4">RFC 3986 §3.4</a> and example <a href="https://github.com/aantron/dream/tree/master/example/w-query#files"><code>w-query</code></a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-queries">
+     <div class="backing"></div>
+     <a href="#val-queries" class="anchor"></a><code><span><span class="keyword">val</span> queries : <span>string <span class="arrow">-&gt;</span></span> <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> <span>string list</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      All query parameters with the given name.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-all_queries">
+     <div class="backing"></div>
+     <a href="#val-all_queries" class="anchor"></a><code><span><span class="keyword">val</span> all_queries : <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> <span><span>(string * string)</span> list</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Entire query string as a name-value list.
+     </p>
+    </div>
+   </div>
+   <h2 id="responses">
+    <div class="backing"></div>
+    <a href="#responses" class="anchor"></a>Responses
+   </h2>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-response">
+     <div class="backing"></div>
+     <a href="#val-response" class="anchor"></a>
+<pre><span class="keyword">val</span> response :
+  <span class="optional">?status:<a href="#type-status">status</a> -&gt;
+  ?code:int -&gt;
+  ?headers:(string * string) list -&gt;</span>
+    string -&gt; <a href="#type-response">response</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Creates a new <a href="#type-response"><code>response</code></a> with the given string as body. <code>~code</code> and <code>~status</code> are two ways to specify the <a href="#type-status"><code>status</code></a> code, which is <code>200 OK</code> by default. The headers are empty by default.
+     </p>
+     <p>
+      Note that browsers may interpret lack of a <code>Content-Type:</code> header as if its value were <code>application/octet-stream</code> or <code>text/html; charset=us-ascii</code>, which will prevent correct interpretation of UTF-8 strings. Either add a <code>Content-Type:</code> header using <code>~headers</code> or <a href="#val-add_header"><code>Dream.add_header</code></a>, or use a wrapper like <a href="#val-html"><code>Dream.html</code></a>. The modern <code>Content-Type:</code> for HTML is <code>text/html; charset=utf-8</code>. See <a href="#val-text_html"><code>Dream.text_html</code></a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-respond">
+     <div class="backing"></div>
+     <a href="#val-respond" class="anchor"></a>
+<pre><span class="keyword">val</span> respond :
+  <span class="optional">?status:<a href="#type-status">status</a> -&gt;
+  ?code:int -&gt;
+  ?headers:(string * string) list -&gt;</span>
+    string -&gt; <a href="#type-response">response</a> <a href="#type-promise">promise</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Same as <a href="#val-response"><code>Dream.response</code></a>, but the new <a href="#type-response"><code>response</code></a> is wrapped in a <a href="#type-promise"><code>promise</code></a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-html">
+     <div class="backing"></div>
+     <a href="#val-html" class="anchor"></a>
+<pre><span class="keyword">val</span> html :
+  <span class="optional">?status:<a href="#type-status">status</a> -&gt;
+  ?code:int -&gt;
+  ?headers:(string * string) list -&gt;</span>
+    string -&gt; <a href="#type-response">response</a> <a href="#type-promise">promise</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Same as <a href="#val-respond"><code>Dream.respond</code></a>, but adds <code>Content-Type: text/html; charset=utf-8</code>. See <a href="#val-text_html"><code>Dream.text_html</code></a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-json">
+     <div class="backing"></div>
+     <a href="#val-json" class="anchor"></a>
+<pre><span class="keyword">val</span> json :
+  <span class="optional">?status:<a href="#type-status">status</a> -&gt;
+  ?code:int -&gt;
+  ?headers:(string * string) list -&gt;</span>
+    string -&gt; <a href="#type-response">response</a> <a href="#type-promise">promise</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Same as <a href="#val-respond"><code>Dream.respond</code></a>, but adds <code>Content-Type: application/json</code>. See <a href="#val-application_json"><code>Dream.application_json</code></a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-redirect">
+     <div class="backing"></div>
+     <a href="#val-redirect" class="anchor"></a>
+<pre><span class="keyword">val</span> redirect :
+  <span class="optional">?status:<a href="#type-status">status</a> -&gt;
+  ?code:int -&gt;
+  ?headers:(string * string) list -&gt;</span>
+    string -&gt; <a href="#type-response">response</a> <a href="#type-promise">promise</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Creates a new <a href="#type-response"><code>response</code></a>. Adds a <code>Location:</code> header with the given string. The default status code is <code>303 See Other</code>, for a temporary redirection. Use <code>~status:`Moved_Permanently</code> or <code>~code:301</code> for a permanent redirection.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-empty">
+     <div class="backing"></div>
+     <a href="#val-empty" class="anchor"></a>
+<pre><span class="keyword">val</span> empty :
+  ?headers:(string * string) list -&gt;
+    status -&gt; <a href="#type-response">response</a> <a href="#type-promise">promise</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Same as <a href="#val-response"><code>Dream.response</code></a> with the empty string for a body.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-stream">
+     <div class="backing"></div>
+     <a href="#val-stream" class="anchor"></a>
+<pre><span class="keyword">val</span> stream :
+  ?status:<a href="#type-status">status</a> -&gt;
+  ?code:int -&gt;
+  ?headers:(string * string) list -&gt;
+    (<a href="#type-response">response</a> -&gt; unit <a href="#type-promise">promise</a>) -&gt; <a href="#type-response">response</a> <a href="#type-promise">promise</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Same as <a href="#val-respond"><code>Dream.respond</code></a>, but calls <a href="#val-with_stream"><code>Dream.with_stream</code></a> internally to prepare the response for stream writing, and then runs the callback asynchronously to do it. See example <a href="https://github.com/aantron/dream/tree/master/example/j-stream#files"><code>j-stream</code></a>.
+     </p>
+     <pre><code>fun request -&gt;
+  Dream.stream (fun response -&gt;
+    let%lwt () = Dream.write "foo" response in
+    Dream.close_stream response)</code></pre>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-status">
+     <div class="backing"></div>
+     <a href="#val-status" class="anchor"></a><code><span><span class="keyword">val</span> status : <span><a href="#type-response">response</a> <span class="arrow">-&gt;</span></span> <a href="#type-status">status</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Response <a href="#type-status"><code>status</code></a>. For example, <code>`OK</code>.
+     </p>
+    </div>
+   </div>
+   <h2 id="headers">
+    <div class="backing"></div>
+    <a href="#headers" class="anchor"></a>Headers
+   </h2>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-header">
+     <div class="backing"></div>
+     <a href="#val-header" class="anchor"></a><code><span><span class="keyword">val</span> header : <span>string <span class="arrow">-&gt;</span></span> <span><span><span class="type-var">'a</span> <a href="#type-message">message</a></span> <span class="arrow">-&gt;</span></span> <span>string option</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      First header with the given name. Header names are case-insensitive. See <a href="https://tools.ietf.org/html/rfc7230#section-3.2">RFC 7230 §3.2</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers">MDN</a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-headers">
+     <div class="backing"></div>
+     <a href="#val-headers" class="anchor"></a><code><span><span class="keyword">val</span> headers : <span>string <span class="arrow">-&gt;</span></span> <span><span><span class="type-var">'a</span> <a href="#type-message">message</a></span> <span class="arrow">-&gt;</span></span> <span>string list</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      All headers with the given name.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-all_headers">
+     <div class="backing"></div>
+     <a href="#val-all_headers" class="anchor"></a><code><span><span class="keyword">val</span> all_headers : <span><span><span class="type-var">'a</span> <a href="#type-message">message</a></span> <span class="arrow">-&gt;</span></span> <span><span>(string * string)</span> list</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Entire header set as name-value list.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-has_header">
+     <div class="backing"></div>
+     <a href="#val-has_header" class="anchor"></a><code><span><span class="keyword">val</span> has_header : <span>string <span class="arrow">-&gt;</span></span> <span><span><span class="type-var">'a</span> <a href="#type-message">message</a></span> <span class="arrow">-&gt;</span></span> bool</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Whether the message has a header with the given name.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-add_header">
+     <div class="backing"></div>
+     <a href="#val-add_header" class="anchor"></a>
+<pre><span class="keyword">val</span> add_header :
+  string -&gt; string -&gt; 'a <a href="#type-message">message</a> -&gt; 'a <a href="#type-message">message</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Appends a header with the given name and value. Does not remove any existing headers with the same name.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-drop_header">
+     <div class="backing"></div>
+     <a href="#val-drop_header" class="anchor"></a><code><span><span class="keyword">val</span> drop_header : <span>string <span class="arrow">-&gt;</span></span> <span><span><span class="type-var">'a</span> <a href="#type-message">message</a></span> <span class="arrow">-&gt;</span></span> <span><span class="type-var">'a</span> <a href="#type-message">message</a></span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Removes all headers with the given name.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-with_header">
+     <div class="backing"></div>
+     <a href="#val-with_header" class="anchor"></a>
+<pre><span class="keyword">val</span> with_header :
+  string -&gt; string -&gt; 'a <a href="#type-message">message</a> -&gt; 'a <a href="#type-message">message</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Equivalent to <a href="#val-drop_header"><code>Dream.drop_header</code></a> followed by <a href="#val-add_header"><code>Dream.add_header</code></a>.
+     </p>
+    </div>
+   </div>
+   <h2 id="cookies">
+    <div class="backing"></div>
+    <a href="#cookies" class="anchor"></a>Cookies
+   </h2>
+   <p>
+    <a href="#val-set_cookie"><code>Dream.set_cookie</code></a> and <a href="#val-cookie"><code>Dream.cookie</code></a> are designed for round-tripping secure cookies. The most secure settings applicable to the current server are inferred automatically. See example <a href="https://github.com/aantron/dream/tree/master/example/c-cookie#files"><code>c-cookie</code></a>.
+   </p>
+   <pre><code>Dream.set_cookie "my.cookie" "foo" request response
+Dream.cookie "my.cookie" request</code></pre>
+   <p>
+    The <a href="#val-cookie"><code>Dream.cookie</code></a> call evaluates to <code>Some "foo"</code>, but the actual cookie that is exchanged may look like:
+   </p>
+   <pre>__Host-my.cookie=AL7NLA8-so3e47uy0R5E2MpEQ0TtTWztdhq5pTEUT7KSFg; \
+  Path=/; Secure; HttpOnly; SameSite=Strict</pre>
+   <p>
+    <a href="#val-set_cookie"><code>Dream.set_cookie</code></a> has a large number of optional arguments for tweaking the inferred security settings. If you use them, pass the same arguments to <a href="#val-cookie"><code>Dream.cookie</code></a> to automatically undo the result.
+   </p>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-set_cookie">
+     <div class="backing"></div>
+     <a href="#val-set_cookie" class="anchor"></a>
+<pre><span class="keyword">val</span> set_cookie :
+  <span class="optional">?prefix:[ `Host | `Secure ] option -&gt;
+  ?encrypt:bool -&gt;
+  ?expires:float -&gt;
+  ?max_age:float -&gt;
+  ?domain:string -&gt;
+  ?path:string option -&gt;
+  ?secure:bool -&gt;
+  ?http_only:bool -&gt;
+  ?same_site:[ `Strict | `Lax | `None ] option -&gt;</span>
+    string -&gt; string -&gt; <a href="#type-request">request</a> -&gt; <a href="#type-response">response</a> -&gt; <a href="#type-response">response</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Appends a <code>Set-Cookie:</code> header to the <a href="#type-response"><code>response</code></a>. Infers the most secure defaults from the <a href="#type-request"><code>request</code></a>.
+     </p>
+     <pre><code>Dream.set_cookie "my.cookie" "value" request response</code></pre>
+     <p>
+      Specify <a href="#val-run"><code>Dream.run</code></a> argument <code>~secret</code>, or the Web app will not be able to decrypt cookies from prior starts.
+     </p>
+     <p>
+      See example <a href="https://github.com/aantron/dream/tree/master/example/c-cookie#files"><code>c-cookie</code></a>.
+     </p>
+     <p>
+      Most of the optional arguments are for overriding inferred defaults. <code>~expires</code> and <code>~max_age</code> are independently useful. In particular, to delete a cookie, use <code>~expires:0.</code>
+     </p>
+     <ul>
+      <li>
+       <code>~prefix</code> sets <code>__Host-</code>, <code>__Secure-</code>, or no prefix, from most secure to least. A conforming client will refuse to accept the cookie if <code>~domain</code>, <code>~path</code>, and <code>~secure</code> don't match the constraints implied by the prefix. By default, <a href="#val-set_cookie"><code>Dream.set_cookie</code></a> chooses the most restrictive prefix based on the other settings and the <a href="#type-request"><code>request</code></a>. See <a href="https://tools.ietf.org/html/draft-ietf-httpbis-rfc6265bis-07#section-4.1.3">RFC 6265bis §4.1.3</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#Cookie_prefixes">MDN</a>.
+      </li>
+      <li>
+       <code>~encrypt:false</code> disables cookie encryption. In that case, you must make sure that the cookie value does not contain <code>=</code>, <code>;</code>, or newlines. The easiest way to do so is to pass the value through an encoder like <a href="#val-to_base64url"><code>Dream.to_base64url</code></a>. See <a href="#val-run"><code>Dream.run</code></a> argument <code>~secret</code>.
+      </li>
+      <li>
+       <code>~expires</code> sets the <code>Expires=</code> attribute. The value is compatible with <a href="https://caml.inria.fr/pub/docs/manual-ocaml/libref/Unix.html#VALgettimeofday"><code>Unix.gettimeofday</code></a>. See <a href="https://tools.ietf.org/html/draft-ietf-httpbis-rfc6265bis-07#section-4.1.2.1">RFC 6265bis §4.1.2.1</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#define_the_lifetime_of_a_cookie">MDN</a>.
+      </li>
+      <li>
+       <code>~max_age</code> sets the <code>Max-Age=</code> attribute. See <a href="https://tools.ietf.org/html/draft-ietf-httpbis-rfc6265bis-07#section-4.1.2.2">RFC 6265bis §4.1.2.2</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#define_the_lifetime_of_a_cookie">MDN</a>.
+      </li>
+      <li>
+       <code>~domain</code> sets the <code>Domain=</code> attribute. See <a href="https://tools.ietf.org/html/draft-ietf-httpbis-rfc6265bis-07#section-4.1.2.3">RFC 6265bis §4.1.2.3</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#Domain_attribute">MDN</a>.
+      </li>
+      <li>
+       <code>~path</code> sets the <code>Path=</code> attribute. By default, <code>Path=</code> set to the site prefix in the <a href="#type-request"><code>request</code></a>, which is usually <code>/</code>. See <a href="https://tools.ietf.org/html/draft-ietf-httpbis-rfc6265bis-07#section-4.1.2.4">RFC 6265bis §4.1.2.4</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#Path_attribute">MDN</a>.
+      </li>
+      <li>
+       <code>~secure</code> sets the <code>Secure</code> attribute. By default, <code>Secure</code> is set if <a href="#val-https"><code>Dream.https</code></a> is <code>true</code> for the <a href="#type-request"><code>request</code></a>. See <a href="https://tools.ietf.org/html/draft-ietf-httpbis-rfc6265bis-07#section-4.1.2.5">RFC 6265bis §4.1.2.5</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#restrict_access_to_cookies">MDN</a>.
+      </li>
+      <li>
+       <code>~http_only</code> sets the <code>HttpOnly</code> attribute. <code>HttpOnly</code> is set by default. See <a href="https://tools.ietf.org/html/draft-ietf-httpbis-rfc6265bis-07#section-4.1.2.6">RFC 6265bis §4.1.2.6</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#restrict_access_to_cookies">MDN</a>.
+      </li>
+      <li>
+       <code>~same_site</code> sets the <code>SameSite=</code> attribute. <code>SameSite</code> is set to <code>Strict</code> by default. See <a href="https://tools.ietf.org/html/draft-ietf-httpbis-rfc6265bis-07#section-4.1.2.7">RFC 6265bis §4.1.2.7</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#SameSite_attribute">MDN</a>.
+      </li>
+     </ul>
+     <p>
+      <a href="#val-to_set_cookie"><code>Dream.to_set_cookie</code></a> is a “raw” version of this function that does not do any inference.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-cookie">
+     <div class="backing"></div>
+     <a href="#val-cookie" class="anchor"></a>
+<pre><span class="keyword">val</span> cookie :
+  ?prefix:[ `Host | `Secure ] option -&gt;
+  ?decrypt:bool -&gt;
+  ?domain:string -&gt;
+  ?path:string option -&gt;
+  ?secure:bool -&gt;
+    string -&gt; <a href="#type-request">request</a> -&gt; string option
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      First cookie with the given name. See example <a href="https://github.com/aantron/dream/tree/master/example/c-cookie#files"><code>c-cookie</code></a>.
+     </p>
+     <pre><code>Dream.cookie "my.cookie" request</code></pre>
+     <p>
+      Pass the same optional arguments as to <a href="#val-set_cookie"><code>Dream.set_cookie</code></a> for the same cookie. This will allow <a href="#val-cookie"><code>Dream.cookie</code></a> to infer the cookie name prefix, implementing a transparent cookie round trip with the most secure attributes applicable.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-all_cookies">
+     <div class="backing"></div>
+     <a href="#val-all_cookies" class="anchor"></a><code><span><span class="keyword">val</span> all_cookies : <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> <span><span>(string * string)</span> list</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      All cookies, with raw names and values.
+     </p>
+    </div>
+   </div>
+   <h2 id="bodies">
+    <div class="backing"></div>
+    <a href="#bodies" class="anchor"></a>Bodies
+   </h2>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-body">
+     <div class="backing"></div>
+     <a href="#val-body" class="anchor"></a><code><span><span class="keyword">val</span> body : <span><span><span class="type-var">'a</span> <a href="#type-message">message</a></span> <span class="arrow">-&gt;</span></span> <span>string <a href="#type-promise">promise</a></span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Retrieves the entire body. Stores a reference, so <a href="#val-body"><code>Dream.body</code></a> can be used many times. See example <a href="https://github.com/aantron/dream/tree/master/example/6-echo#files"><code>6-echo</code></a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-with_body">
+     <div class="backing"></div>
+     <a href="#val-with_body" class="anchor"></a><code><span><span class="keyword">val</span> with_body : <span>string <span class="arrow">-&gt;</span></span> <span><a href="#type-response">response</a> <span class="arrow">-&gt;</span></span> <a href="#type-response">response</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Replaces the body.
+     </p>
+    </div>
+   </div>
+   <h3 id="streaming">
+    <div class="backing"></div>
+    <a href="#streaming" class="anchor"></a>Streaming
+   </h3>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-read">
+     <div class="backing"></div>
+     <a href="#val-read" class="anchor"></a><code><span><span class="keyword">val</span> read : <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> <span><span>string option</span> <a href="#type-promise">promise</a></span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Retrieves a body chunk. The chunk is not buffered, thus it can only be read once. See example <a href="https://github.com/aantron/dream/tree/master/example/j-stream#files"><code>j-stream</code></a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-with_stream">
+     <div class="backing"></div>
+     <a href="#val-with_stream" class="anchor"></a><code><span><span class="keyword">val</span> with_stream : <span><a href="#type-response">response</a> <span class="arrow">-&gt;</span></span> <a href="#type-response">response</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Makes the <a href="#type-response"><code>response</code></a> ready for stream writing with <a href="#val-write"><code>Dream.write</code></a>. You should return it from your handler soon after — only one call to <a href="#val-write"><code>Dream.write</code></a> will be accepted before then. See <a href="#val-stream"><code>Dream.stream</code></a> for a more convenient wrapper.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-write">
+     <div class="backing"></div>
+     <a href="#val-write" class="anchor"></a><code><span><span class="keyword">val</span> write : <span>string <span class="arrow">-&gt;</span></span> <span><a href="#type-response">response</a> <span class="arrow">-&gt;</span></span> <span>unit <a href="#type-promise">promise</a></span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Streams out the string. The promise is fulfilled when the response can accept more writes.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-flush">
+     <div class="backing"></div>
+     <a href="#val-flush" class="anchor"></a><code><span><span class="keyword">val</span> flush : <span><a href="#type-response">response</a> <span class="arrow">-&gt;</span></span> <span>unit <a href="#type-promise">promise</a></span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Flushes write buffers. Data is sent to the client.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-close_stream">
+     <div class="backing"></div>
+     <a href="#val-close_stream" class="anchor"></a><code><span><span class="keyword">val</span> close_stream : <span><a href="#type-response">response</a> <span class="arrow">-&gt;</span></span> <span>unit <a href="#type-promise">promise</a></span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Finishes the response stream.
+     </p>
+    </div>
+   </div>
+   <h3 id="low-level-streaming">
+    <div class="backing"></div>
+    <a href="#low-level-streaming" class="anchor"></a>Low-level streaming
+   </h3>
+   <div class="odoc-spec">
+    <div class="multiline spec type" id="type-bigstring">
+     <div class="backing"></div>
+     <a href="#type-bigstring" class="anchor"></a>
+<pre><span class="keyword">type</span> bigstring =
+  (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout)
+    Bigarray.Array1.t
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Byte arrays in the C heap. See <a href="http://caml.inria.fr/pub/docs/manual-ocaml/libref/Bigarray.Array1.html"><code>Bigarray.Array1</code></a>. This type is also found in several libraries installed by Dream, so their functions can be used with <a href="#type-bigstring"><code>Dream.bigstring</code></a>:
+     </p>
+     <ul>
+      <li>
+       <a href="https://github.com/inhabitedtype/bigstringaf/blob/353cb283aef4c261597f68154eb27a138e7ef112/lib/bigstringaf.mli"><code>Bigstringaf.t</code></a> in bigstringaf.
+      </li>
+      <li>
+       <a href="https://ocsigen.org/lwt/latest/api/Lwt_bytes"><code>Lwt_bytes.t</code></a> in Lwt.
+      </li>
+      <li>
+       <a href="https://github.com/mirage/ocaml-cstruct/blob/9a8b9a79bdfa2a1b8455bc26689e0228cc6fac8e/lib/cstruct.mli#L139"><code>Cstruct.buffer</code></a> in Cstruct.
+      </li>
+     </ul>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-next">
+     <div class="backing"></div>
+     <a href="#val-next" class="anchor"></a>
+<pre><span class="keyword">val</span> next :
+  bigstring:(<a href="#type-bigstring">bigstring</a> -&gt; int -&gt; int -&gt; unit) -&gt;
+  close:(unit -&gt; unit) -&gt;
+  exn:(exn -&gt; unit) -&gt;
+  <a href="#type-request">request</a> -&gt;
+    unit
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Waits for the next stream event, and calls:
+     </p>
+     <ul>
+      <li>
+       <code>~bigstring</code> with an offset and length, if a <a href="#type-bigstring"><code>bigstring</code></a> is written,
+      </li>
+      <li>
+       <code>~close</code> if close is requested, and
+      </li>
+      <li>
+       <code>~exn</code> to report an exception.
+      </li>
+     </ul>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-write_bigstring">
+     <div class="backing"></div>
+     <a href="#val-write_bigstring" class="anchor"></a>
+<pre><span class="keyword">val</span> write_bigstring :
+  <a href="#type-bigstring">bigstring</a> -&gt; int -&gt; int -&gt; <a href="#type-response">response</a> -&gt; unit <a href="#type-promise">promise</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Streams out the <a href="#type-bigstring"><code>bigstring</code></a> slice.
+     </p>
+    </div>
+   </div>
+   <h2 id="json">
+    <div class="backing"></div>
+    <a href="#json" class="anchor"></a>JSON
+   </h2>
+   <p>
+    Dream presently recommends using <a href="https://github.com/ocaml-community/yojson#readme">Yojson</a>. See also <a href="https://github.com/janestreet/ppx_yojson_conv#readme">ppx_yojson_conv</a> for generating JSON parsers and serializers for OCaml data types.
+   </p>
+   <p>
+    See example <a href="https://github.com/aantron/dream/tree/master/example/e-json#files"><code>e-json</code></a>.
+   </p>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-origin_referer_check">
+     <div class="backing"></div>
+     <a href="#val-origin_referer_check" class="anchor"></a><code><span><span class="keyword">val</span> origin_referer_check : <a href="#type-middleware">middleware</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      CSRF protection for AJAX requests. Either the method must be <code>`GET</code> or <code>`HEAD</code>, or:
+     </p>
+     <ul>
+      <li>
+       <code>Origin:</code> or <code>Referer:</code> must be present, and
+      </li>
+      <li>
+       their value must match <code>Host:</code>
+      </li>
+     </ul>
+     <p>
+      Responds with <code>400 Bad Request</code> if the check fails. See example <a href="https://github.com/aantron/dream/tree/master/example/e-json#security"><code>e-json</code></a>.
+     </p>
+     <p>
+      Implements the <a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#verifying-origin-with-standard-headers">OWASP <i>Verifying Origin With Standard Headers</i></a> CSRF defense-in-depth technique, which is good enough for basic usage. Do not allow <code>`GET</code> or <code>`HEAD</code> requests to trigger important side effects if relying only on <a href="#val-origin_referer_check"><code>Dream.origin_referer_check</code></a>.
+     </p>
+     <p>
+      Future extensions to this function may use <code>X-Forwarded-Host</code> or host whitelists.
+     </p>
+     <p>
+      For more thorough protection, generate CSRF tokens with <a href="#val-csrf_token"><code>Dream.csrf_token</code></a>, send them to the client (for instance, in <code>&lt;meta&gt;</code> tags of a single-page application), and require their presence in an <code>X-CSRF-Token:</code> header.
+     </p>
+    </div>
+   </div>
+   <h2 id="forms">
+    <div class="backing"></div>
+    <a href="#forms" class="anchor"></a>Forms
+   </h2>
+   <p>
+    <a href="#val-form_tag"><code>Dream.form_tag</code></a> and <a href="#val-form"><code>Dream.form</code></a> round-trip secure forms. <a href="#val-form_tag"><code>Dream.form_tag</code></a> is used inside a template to generate a form header with a CSRF token:
+   </p>
+   <pre><code>&lt;%s! Dream.form_tag ~action:"/" request %&gt;
+  &lt;input name="my.field"&gt;
+&lt;/form&gt;</code></pre>
+   <p>
+    <a href="#val-form"><code>Dream.form</code></a> recieves the form and checks the CSRF token:
+   </p>
+   <pre><code>match%lwt Dream.form request with
+| `Ok ["my.field", value] -&gt; (* ... *)
+| _ -&gt; Dream.empty `Bad_Request</code></pre>
+   <p>
+    See example <a href="https://github.com/aantron/dream/tree/master/example/d-form#files"><code>d-form</code></a>.
+   </p>
+   <div class="odoc-spec">
+    <div class="multiline spec type" id="type-form_result">
+     <div class="backing"></div>
+     <a href="#type-form_result" class="anchor"></a>
+<pre class="compact"><span class="keyword">type</span> 'a form_result = [
+  | `Ok            <span class="of">of</span> 'a
+  | `Expired       <span class="of">of</span> 'a * float
+  | `Wrong_session <span class="of">of</span> 'a
+  | `Invalid_token <span class="of">of</span> 'a
+  | `Missing_token <span class="of">of</span> 'a
+  | `Many_tokens   <span class="of">of</span> 'a
+  | `Wrong_content_type
+]
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Form CSRF checking results, in order from least to most severe. See <a href="#val-form"><code>Dream.form</code></a> and example <a href="https://github.com/aantron/dream/tree/master/example/d-form#files"><code>d-form</code></a>.
+     </p>
+     <p>
+      The first three constructors, <code>`Ok</code>, <code>`Expired</code>, and <code>`Wrong_session</code> can occur in regular usage.
+     </p>
+     <p>
+      The remaining constructors, <code>`Invalid_token</code>, <code>`Missing_token</code>, <code>`Many_tokens</code>, <code>`Wrong_content_type</code> correspond to bugs, suspicious activity, or tokens so old that decryption keys have since been rotated on the server.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-form">
+     <div class="backing"></div>
+     <a href="#val-form" class="anchor"></a>
+<pre><span class="keyword">val</span> form :
+  <a href="#type-request">request</a> -&gt; (string * string) list <a href="#type-form_result">form_result</a> <a href="#type-promise">promise</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Parses the request body as a form. Performs CSRF checks. Use <a href="#val-form_tag"><code>Dream.form_tag</code></a> in a template to transparently generate forms that will pass these checks. See <a href="#templates">Templates</a> and example <a href="https://github.com/aantron/dream/tree/master/example/d-form#readme"><code>d-form</code></a>.
+     </p>
+     <ul>
+      <li>
+       <code>Content-Type:</code> must be <code>application/x-www-form-urlencoded</code>.
+      </li>
+      <li>
+       The form must have a field named <code>dream.csrf</code>. <a href="#val-form_tag"><code>Dream.form_tag</code></a> adds such a field.
+      </li>
+      <li>
+       <a href="#val-form"><code>Dream.form</code></a> calls <a href="#val-verify_csrf_token"><code>Dream.verify_csrf_token</code></a> to check the token in <code>dream.csrf</code>.
+      </li>
+     </ul>
+     <p>
+      The call must be done under a session middleware, since each CSRF token is scoped to a session. See <a href="#sessions">Sessions</a>.
+     </p>
+     <p>
+      Form fields are sorted for easy pattern matching:
+     </p>
+     <pre><code>match%lwt Dream.form request with
+| `Ok ["email", email; "name", name] -&gt; (* ... *)
+| _ -&gt; Dream.empty `Bad_Request</code></pre>
+     <p>
+      To recover from conditions like expired forms, add extra cases:
+     </p>
+     <pre><code>match%lwt Dream.form request with
+| `Ok      ["email", email; "name", name] -&gt; (* ... *)
+| `Expired ["email", email; "name", name] -&gt; (* ... *)
+| _ -&gt; Dream.empty `Bad_Request</code></pre>
+     <p>
+      It is recommended not to mutate state or send back sensitive data in the <code>`Expired</code> and <code>`Wrong_session</code> cases, as they <em>may</em> indicate an attack against a client.
+     </p>
+     <p>
+      The remaining cases, including unexpected field sets and the remaining constructors of <a href="#type-form_result"><code>Dream.form_result</code></a>, usually indicate either bugs or attacks. It's usually fine to respond to all of them with <code>400 Bad
+    Request</code>.
+     </p>
+    </div>
+   </div>
+   <h3 id="upload">
+    <div class="backing"></div>
+    <a href="#upload" class="anchor"></a>Upload
+   </h3>
+   <div class="odoc-spec">
+    <div class="multiline spec type" id="type-part">
+     <div class="backing"></div>
+     <a href="#type-part" class="anchor"></a>
+<pre><span class="keyword">type</span> part = [
+  | `Files of (string * string) list
+  | `Value of string
+]
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Field values of an upload form, <code>&lt;form enctype="multipart/form-data"&gt;</code>. See <a href="#val-multipart"><code>Dream.multipart</code></a> and example <a href="https://github.com/aantron/dream/tree/master/example/g-upload#files"><code>g-upload</code></a>.
+     </p>
+     <ul>
+      <li>
+       <code>`Files</code> is a list of filename-content pairs.
+      </li>
+      <li>
+       <code>`Value</code> is the value of an ordinary form field.
+      </li>
+     </ul>
+     <p>
+      Parts are then paired with field names by <a href="#val-multipart"><code>Dream.multipart</code></a>, making a <code>(string * part) list</code>.
+     </p>
+     <p>
+      For example, if the form has <code>&lt;input name="foo" type="file" multiple&gt;</code>, and the user selects multiple files, the received field name and <a href="#type-part"><code>part</code></a> will be
+     </p>
+     <pre><code>("foo", `Files [
+  ("file1", "data1");
+  ("file2", "data2");
+])</code></pre>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-multipart">
+     <div class="backing"></div>
+     <a href="#val-multipart" class="anchor"></a>
+<pre><span class="keyword">val</span> multipart :
+  <a href="#type-request">request</a> -&gt; (string * <a href="#type-part">part</a>) list <a href="#type-form_result">form_result</a> <a href="#type-promise">promise</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Like <a href="#val-form"><code>Dream.form</code></a>, but also reads files, and <code>Content-Type:</code> must be <code>multipart/form-data</code>. The <code>&lt;form&gt;</code> tag and CSRF token can be generated in a template with
+     </p>
+     <pre><code>&lt;%s! Dream.form_tag ~action:"/"
+       ~enctype:`Multipart_form_data request %&gt;</code></pre>
+     <p>
+      See <a href="#val-form_tag"><code>Dream.form_tag</code></a>, section <a href="#templates">Templates</a>, and example <a href="https://github.com/aantron/dream/tree/master/example/g-upload#files"><code>g-upload</code></a>.
+     </p>
+     <p>
+      <a href="#val-multipart"><code>Dream.multipart</code></a> reads entire files into memory, so it is only suitable for prototyping, or with yet-to-be-added file size and count limits. See <a href="#val-upload"><code>Dream.upload</code></a> below for a streaming version.
+     </p>
+    </div>
+   </div>
+   <h3 id="streaming-upload">
+    <div class="backing"></div>
+    <a href="#streaming-upload" class="anchor"></a>Streaming upload
+   </h3>
+   <div class="odoc-spec">
+    <div class="multiline spec type" id="type-upload_event">
+     <div class="backing"></div>
+     <a href="#type-upload_event" class="anchor"></a>
+<pre><span class="keyword">type</span> upload_event = [
+  | `File <span class="of">of</span> string * string
+  | `Field <span class="of">of</span> string * string
+  | `Done
+  | `Wrong_content_type
+]
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Upload stream events.
+     </p>
+     <ul>
+      <li>
+       <code>`File (field_name, filename)</code> begins a file in the stream. The Web app should call <a href="#val-upload_file"><code>Dream.upload_file</code></a> until <code>None</code>, then call <a href="#val-upload"><code>Dream.upload</code></a> again.
+      </li>
+      <li>
+       <code>`Field (field_name, value)</code> is a complete field. The Web app should call <a href="#val-upload"><code>Dream.upload</code></a> next.
+      </li>
+      <li>
+       <code>`Done</code> ends the stream.
+      </li>
+      <li>
+       <code>`Wrong_content_type</code> occurs on the first call to <a href="#val-upload"><code>Dream.upload</code></a> if <code>Content-Type:</code> is not <code>multipart/form-data</code>.
+      </li>
+     </ul>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-upload">
+     <div class="backing"></div>
+     <a href="#val-upload" class="anchor"></a><code><span><span class="keyword">val</span> upload : <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> <span><a href="#type-upload_event">upload_event</a> <a href="#type-promise">promise</a></span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Retrieves the next upload stream event.
+     </p>
+     <p>
+      Does not verify a CSRF token. There are several ways to add CSRF protection for an upload stream, including:
+     </p>
+     <ul>
+      <li>
+       Generate the form with <a href="#val-form_tag"><code>Dream.form_tag</code></a>. Check for <code>`Field ("dream.csrf", token)</code> during upload and call <a href="#val-verify_csrf_token"><code>Dream.verify_csrf_token</code></a>.
+      </li>
+      <li>
+       Use <a href="https://developer.mozilla.org/en-US/docs/Web/API/FormData"><code>FormData</code></a> in the client to submit <code>multipart/form-data</code> by AJAX, and include a custom header.
+      </li>
+     </ul>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-upload_file">
+     <div class="backing"></div>
+     <a href="#val-upload_file" class="anchor"></a><code><span><span class="keyword">val</span> upload_file : <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> <span><span>string option</span> <a href="#type-promise">promise</a></span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Retrieves a file chunk.
+     </p>
+    </div>
+   </div>
+   <h3 id="csrf-tokens">
+    <div class="backing"></div>
+    <a href="#csrf-tokens" class="anchor"></a>CSRF tokens
+   </h3>
+   <p>
+    It's usually not necessary to handle CSRF tokens directly.
+   </p>
+   <ul>
+    <li>
+     Form tag generator <a href="#val-form_tag"><code>Dream.form_tag</code></a> generates and inserts a CSRF token that <a href="#val-form"><code>Dream.form</code></a> and <a href="#val-multipart"><code>Dream.multipart</code></a> transparently verify.
+    </li>
+    <li>
+     AJAX can be protected from CSRF by <a href="#val-origin_referer_check"><code>Dream.origin_referer_check</code></a>.
+    </li>
+   </ul>
+   <p>
+    CSRF functions are exposed for creating custom schemes, and for defense in depth purposes.
+   </p>
+   <div class="odoc-spec">
+    <div class="multiline spec type" id="type-csrf_result">
+     <div class="backing"></div>
+     <a href="#type-csrf_result" class="anchor"></a>
+<pre class="compact"><span class="keyword">type</span> csrf_result = [
+  | `Ok
+  | `Expired <span class="of">of</span> float
+  | `Wrong_session
+  | `Invalid
+]
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      CSRF token verification outcomes.
+     </p>
+     <p>
+      <code>`Expired</code> and <code>`Wrong_session</code> can occur in normal usage, when a user's form or session expire, respectively. However, they can also indicate attacks, including stolen tokens, stolen tokens from other sessions, or attempts to use a token from an invalidated pre-session after login.
+     </p>
+     <p>
+      <code>`Invalid</code> indicates a token with a bad signature, a payload that was not generated by Dream, or other serious errors that cannot usually be triggered by normal users. <code>`Invalid</code> usually corresponds to bugs or attacks. <code>`Invalid</code> can also occur for very old tokens after old keys are no longer in use on the server.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-csrf_token">
+     <div class="backing"></div>
+     <a href="#val-csrf_token" class="anchor"></a><code><span><span class="keyword">val</span> csrf_token : <span>?valid_for:float <span class="arrow">-&gt;</span></span> <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> string</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Returns a fresh CSRF token bound to the given request's and signed with the <code>~secret</code> given to <a href="#val-run"><code>Dream.run</code></a>. <code>~valid_for</code> is the token's lifetime, in seconds. The default value is one hour (<code>3600.</code>). Dream uses signed tokens that are not stored server-side.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-verify_csrf_token">
+     <div class="backing"></div>
+     <a href="#val-verify_csrf_token" class="anchor"></a>
+<pre><span class="keyword">val</span> verify_csrf_token :
+  string -&gt; <a href="#type-request">request</a> -&gt; <a href="#type-csrf_result">csrf_result</a> <a href="#type-promise">promise</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Checks that the CSRF token is valid for the request's session.
+     </p>
+    </div>
+   </div>
+   <h2 id="templates">
+    <div class="backing"></div>
+    <a href="#templates" class="anchor"></a>Templates
+   </h2>
+   <p>
+    Dream includes a template preprocessor that allows interleaving OCaml and HTML in the same file:
+   </p>
+   <pre>let render message =
+  &lt;html&gt;
+    &lt;body&gt;
+      &lt;p&gt;The message is &lt;b&gt;&lt;%s message %&gt;&lt;/b&gt;!&lt;/p&gt;
+    &lt;/body&gt;
+  &lt;/html&gt;</pre>
+   <p>
+    See examples <a href="https://github.com/aantron/dream/tree/master/example/7-template#files"><code>7-template</code></a> and <a href="https://github.com/aantron/dream/tree/master/example/r-template#files"><code>r-template</code></a>.
+   </p>
+   <p>
+    To build the template, add this to <code>dune</code>:
+   </p>
+   <pre>(rule
+ (targets template.ml)
+ (deps template.eml.ml)
+ (action (run dream_eml %{deps} --workspace %{workspace_root})))</pre>
+   <p>
+    A template begins...
+   </p>
+   <ul>
+    <li>
+     <em>Implicitly</em> on a line that starts with <code>&lt;</code>, perhaps with leading whitespace. The line is part of the template.
+    </li>
+    <li>
+     <em>Explicitly</em> after a line that starts with <code>%%</code>. The <code>%%</code> line is not part of the template.
+    </li>
+   </ul>
+   <p>
+    A <code>%%</code> line can also be used to set template options. The only option supported presently is <code>%% response</code> for streaming the template using <a href="#val-write"><code>Dream.write</code></a>, to a <a href="#type-response"><code>response</code></a> that is in scope. This is shown in examples <a href="https://github.com/aantron/dream/tree/master/example/w-template-stream#files"><code>w-template-stream</code></a> and <a href="https://github.com/aantron/dream/tree/master/example/r-template-stream#files"><code>r-template-stream</code></a>.
+   </p>
+   <p>
+    A template ends...
+   </p>
+   <ul>
+    <li>
+     <em>Implicitly</em>, when the indentation level is less than that of the beginning line.
+    </li>
+    <li>
+     <em>Explicitly</em> on a line that starts with another <code>%%</code>.
+    </li>
+   </ul>
+   <p>
+    Everything outside a template is ordinary OCaml code.
+   </p>
+   <p>
+    OCaml code can also be inserted into a template:
+   </p>
+   <ul>
+    <li>
+     <code>&lt;%s code %&gt;</code> expects <code>code</code> to evaluate to a <code>string</code>, and inserts the <code>string</code> into the template.
+    </li>
+    <li>
+     A line that begins with <code>%</code> in the first column is OCaml code inside the template. Its value is not inserted into the template. Indeed, it can be fragments of control-flow constructs.
+    </li>
+    <li>
+     <code>&lt;% code %&gt;</code> is a variant of <code>%</code> that can be used for short snippets within template lines.
+    </li>
+   </ul>
+   <p>
+    The <code>s</code> in <code>&lt;%s code %&gt;</code> is actually a <a href="https://caml.inria.fr/pub/docs/manual-ocaml/libref/Printf.html">Printf</a>-style format specification. So, for example, one can print two hex digits using <code>&lt;%02X code %&gt;</code>.
+   </p>
+   <p>
+    <code>&lt;%s code %&gt;</code> automatically escapes the result of <code>code</code> using <a href="#val-html_escape"><code>Dream.html_escape</code></a>. This can be suppressed with <code>!</code>. <code>&lt;%s! code %&gt;</code> prints the result of <code>code</code> literally. <a href="#val-html_escape"><code>Dream.html_escape</code></a> is only safe for use in HTML text and quoted attribute values. It does not offer XSS protection in unquoted attribute values, CSS in <code>&lt;style&gt;</code> tags, or literal JavaScript in <code>&lt;script&gt;</code> tags.
+   </p>
+   <p>
+    The preprocessor will output Reason code if the template source file's extension is <code>.re</code>, for example <code>template.eml.re</code>. See examples <a href="https://github.com/aantron/dream/tree/master/example/r-template#files"><code>r-template</code></a> and <a href="https://github.com/aantron/dream/tree/master/example/r-template-stream#files"><code>r-template-stream</code></a>.
+   </p>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-form_tag">
+     <div class="backing"></div>
+     <a href="#val-form_tag" class="anchor"></a>
+<pre><span class="keyword">val</span> form_tag :
+  ?enctype:[ `Multipart_form_data ] -&gt;
+    action:string -&gt; <a href="#type-request">request</a> -&gt; string
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Generates a <code>&lt;form&gt;</code> tag and an <code>&lt;input&gt;</code> tag with a CSRF token, suitable for use with <a href="#val-form"><code>Dream.form</code></a> and <a href="#val-multipart"><code>Dream.multipart</code></a>. For example, in a template,
+     </p>
+     <pre><code>&lt;%s! Dream.form_tag ~action:"/" request %&gt;
+  &lt;input name="my.field"&gt;
+&lt;/form&gt;</code></pre>
+     <p>
+      expands to
+     </p>
+     <pre><code>&lt;form method="POST" action="/"&gt;
+  &lt;input name="dream.csrf" type="hidden" value="a-token"&gt;
+  &lt;input name="my.field"&gt;
+&lt;/form&gt;</code></pre>
+     <p>
+      Pass <code>~enctype:`Multipart_form_data</code> for a file upload form.
+     </p>
+    </div>
+   </div>
+   <h2 id="middleware">
+    <div class="backing"></div>
+    <a href="#middleware" class="anchor"></a>Middleware
+   </h2>
+   <p>
+    Interesting built-in middlewares are scattered throughout the various sections of these docs, according to where they are relevant. This section contains only generic middleware combinators.
+   </p>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-identity">
+     <div class="backing"></div>
+     <a href="#val-identity" class="anchor"></a><code><span><span class="keyword">val</span> identity : <a href="#type-middleware">middleware</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Does nothing but call its inner handler.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-pipeline">
+     <div class="backing"></div>
+     <a href="#val-pipeline" class="anchor"></a><code><span><span class="keyword">val</span> pipeline : <span><span><a href="#type-middleware">middleware</a> list</span> <span class="arrow">-&gt;</span></span> <a href="#type-middleware">middleware</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Combines a sequence of middlewares into one, such that these two lines are equivalent:
+     </p>
+     <pre>Dream.pipeline [middleware_1; middleware_2] @@ handler</pre><pre>               middleware_1 @@ middleware_2 @@ handler</pre>
+    </div>
+   </div>
+   <h2 id="routing">
+    <div class="backing"></div>
+    <a href="#routing" class="anchor"></a>Routing
+   </h2>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-router">
+     <div class="backing"></div>
+     <a href="#val-router" class="anchor"></a><code><span><span class="keyword">val</span> router : <span><span><a href="#type-route">route</a> list</span> <span class="arrow">-&gt;</span></span> <a href="#type-middleware">middleware</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Creates a router. Besides interpreting routes, a router is a middleware which calls its next handler if none of its routes match the request. Route components starting with <code>:</code> are parameters, which can be retrieved with <a href="#val-param"><code>Dream.param</code></a>. See example <a href="https://github.com/aantron/dream/tree/master/example/3-router#files"><code>3-router</code></a>.
+     </p>
+     <pre><code>let () =
+  Dream.run
+  @@ Dream.router [
+    Dream.get "/echo/:word" @@ fun request -&gt;
+      Dream.html (Dream.param "word" request);
+  ]
+  @@ Dream.not_found</code></pre>
+     <p>
+      <a href="#val-scope"><code>Dream.scope</code></a> is the main form of site composition. However, Dream also supports full subsites with <code>**</code>:
+     </p>
+     <pre><code>let () =
+  Dream.run
+  @@ Dream.router [
+    Dream.get "/static/**" @@ Dream.static "www/static";
+  ]
+  @@ Dream.not_found</code></pre>
+     <p>
+      <code>**</code> causes the request's path to be trimmed by the route prefix, and the request's prefix to be extended by it. It is mainly useful for “mounting” <a href="#val-static"><code>Dream.static</code></a> as a subsite.
+     </p>
+     <p>
+      It can also be used as an escape hatch to convert a handler, which may include its own router, into a subsite. However, it is better to compose sites with routes and <a href="#val-scope"><code>Dream.scope</code></a> rather than opaque handlers and <code>**</code>, because, in the future, it may be possible to query routes for site structure metadata.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-param">
+     <div class="backing"></div>
+     <a href="#val-param" class="anchor"></a><code><span><span class="keyword">val</span> param : <span>string <span class="arrow">-&gt;</span></span> <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> string</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Retrieves the path parameter. If it is missing, <a href="#val-param"><code>Dream.param</code></a> raises an exception — the program is buggy.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-scope">
+     <div class="backing"></div>
+     <a href="#val-scope" class="anchor"></a>
+<pre><span class="keyword">val</span> scope :
+  string -&gt; <a href="#type-middleware">middleware</a> list -&gt; <a href="#type-route">route</a> list -&gt; <a href="#type-route">route</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Groups routes under a common path prefix and middlewares. Middlewares are run only if a route matches.
+     </p>
+     <pre><code>Dream.scope "/api" [Dream.origin_referer_check] [
+  Dream.get  "/widget" get_widget_handler;
+  Dream.post "/widget" set_widget_handler;
+]</code></pre>
+     <p>
+      To prefix routes without applying any more middleware, use the empty list:
+     </p>
+     <pre><code>Dream.scope "/api" [] [
+  (* ...routes... *)
+]</code></pre>
+     <p>
+      To apply middleware without prefixing the routes, use <code>"/"</code>:
+     </p>
+     <pre><code>Dream.scope "/" [Dream.origin_referer_check] [
+  (* ...routes... *)
+]</code></pre>
+     <p>
+      Scopes can be nested.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-get">
+     <div class="backing"></div>
+     <a href="#val-get" class="anchor"></a>
+<code><span><span class="keyword">val</span> get &nbsp;&nbsp;&nbsp;&nbsp;: <span>string <span class="arrow">-&gt;</span></span> <span><a href="#type-handler">handler</a> <span class="arrow">-&gt;</span></span> <a href="#type-route">route</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Forwards <code>`GET</code> requests for the given path to the handler.
+     </p>
+     <pre><code>Dream.get "/home" home_template</code></pre>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-post">
+     <div class="backing"></div>
+     <a href="#val-post" class="anchor"></a>
+<code><span><span class="keyword">val</span> post &nbsp;&nbsp;&nbsp;: <span>string <span class="arrow">-&gt;</span></span> <span><a href="#type-handler">handler</a> <span class="arrow">-&gt;</span></span> <a href="#type-route">route</a></span></code>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-put">
+     <div class="backing"></div>
+     <a href="#val-put" class="anchor"></a>
+<code><span><span class="keyword">val</span> put &nbsp;&nbsp;&nbsp;&nbsp;: <span>string <span class="arrow">-&gt;</span></span> <span><a href="#type-handler">handler</a> <span class="arrow">-&gt;</span></span> <a href="#type-route">route</a></span></code>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-delete">
+     <div class="backing"></div>
+     <a href="#val-delete" class="anchor"></a>
+<code><span><span class="keyword">val</span> delete &nbsp;: <span>string <span class="arrow">-&gt;</span></span> <span><a href="#type-handler">handler</a> <span class="arrow">-&gt;</span></span> <a href="#type-route">route</a></span></code>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-head">
+     <div class="backing"></div>
+     <a href="#val-head" class="anchor"></a>
+<code><span><span class="keyword">val</span> head &nbsp;&nbsp;&nbsp;: <span>string <span class="arrow">-&gt;</span></span> <span><a href="#type-handler">handler</a> <span class="arrow">-&gt;</span></span> <a href="#type-route">route</a></span></code>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-connect">
+     <div class="backing"></div>
+     <a href="#val-connect" class="anchor"></a><code><span><span class="keyword">val</span> connect : <span>string <span class="arrow">-&gt;</span></span> <span><a href="#type-handler">handler</a> <span class="arrow">-&gt;</span></span> <a href="#type-route">route</a></span></code>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-options">
+     <div class="backing"></div>
+     <a href="#val-options" class="anchor"></a><code><span><span class="keyword">val</span> options : <span>string <span class="arrow">-&gt;</span></span> <span><a href="#type-handler">handler</a> <span class="arrow">-&gt;</span></span> <a href="#type-route">route</a></span></code>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-trace">
+     <div class="backing"></div>
+     <a href="#val-trace" class="anchor"></a>
+<code><span><span class="keyword">val</span> trace &nbsp;&nbsp;: <span>string <span class="arrow">-&gt;</span></span> <span><a href="#type-handler">handler</a> <span class="arrow">-&gt;</span></span> <a href="#type-route">route</a></span></code>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-patch">
+     <div class="backing"></div>
+     <a href="#val-patch" class="anchor"></a>
+<code><span><span class="keyword">val</span> patch &nbsp;&nbsp;: <span>string <span class="arrow">-&gt;</span></span> <span><a href="#type-handler">handler</a> <span class="arrow">-&gt;</span></span> <a href="#type-route">route</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Like <a href="#val-get"><code>Dream.get</code></a>, but for each of the other <a href="#type-method_">methods</a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-any">
+     <div class="backing"></div>
+     <a href="#val-any" class="anchor"></a>
+<code><span><span class="keyword">val</span> any &nbsp;&nbsp;&nbsp;&nbsp;: <span>string <span class="arrow">-&gt;</span></span> <span><a href="#type-handler">handler</a> <span class="arrow">-&gt;</span></span> <a href="#type-route">route</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Like <a href="#val-get"><code>Dream.get</code></a>, but does not check the method.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-not_found">
+     <div class="backing"></div>
+     <a href="#val-not_found" class="anchor"></a><code><span><span class="keyword">val</span> not_found : <a href="#type-handler">handler</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Always responds with <code>404 Not Found</code>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-static">
+     <div class="backing"></div>
+     <a href="#val-static" class="anchor"></a>
+<pre><span class="keyword">val</span> static :
+  ?loader:(string -&gt; string -&gt; <a href="#type-handler">handler</a>) -&gt;
+    string -&gt; <a href="#type-handler">handler</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Serves static files from the given local path. See example <a href="https://github.com/aantron/dream/tree/master/example/f-static#files"><code>f-static</code></a>.
+     </p>
+     <pre><code>let () =
+  Dream.run
+  @@ Dream.router {
+    Dream.get "/static/**" @@ Dream.static "www/static";
+  }
+  @@ Dream.not_found</code></pre>
+     <p>
+      <code>Dream.static local_path</code> checks that the request <code>path</code> is relative and contains no parent directory references. It then calls <code>~loader local_root
+    path request</code>. The default loader responds with a file at <code>local_root/path</code> in the file system, or <code>404 Not Found</code> if the file does not exist. It uses <a href="https://github.com/mirage/ocaml-magic-mime">magic-mime</a> to set the <code>Content-Type:</code>
+     </p>
+     <p>
+      Pass <code>~loader</code> to implement any other behavior, including serving files from memory. <code>~loader</code> can set headers on its response, including <code>ETag:</code>
+     </p>
+     <p>
+      If checks on <code>path</code> fail, <a href="#val-static"><code>Dream.static</code></a> responds with <code>404 Not Found</code>.
+     </p>
+    </div>
+   </div>
+   <h2 id="sessions">
+    <div class="backing"></div>
+    <a href="#sessions" class="anchor"></a>Sessions
+   </h2>
+   <p>
+    Dream's default sessions contain string-to-string dictionaries for application data. For example, a logged-in session might have
+   </p>
+   <pre><code>[
+  "user", "someone";
+  "lang", "ut-OP";
+]</code></pre>
+   <p>
+    Sessions also have three pieces of metadata:
+   </p>
+   <ul>
+    <li>
+     <a href="#val-session_id"><code>Dream.session_id</code></a>
+    </li>
+    <li>
+     <a href="#val-session_label"><code>Dream.session_label</code></a>
+    </li>
+    <li>
+     <a href="#val-session_expires_at"><code>Dream.session_expires_at</code></a>
+    </li>
+   </ul>
+   <p>
+    There are several back ends, which decide where the sessions are stored:
+   </p>
+   <ul>
+    <li>
+     <a href="#val-memory_sessions"><code>Dream.memory_sessions</code></a>
+    </li>
+    <li>
+     <a href="#val-sql_sessions"><code>Dream.sql_sessions</code></a>
+    </li>
+    <li>
+     <a href="#val-cookie_sessions"><code>Dream.cookie_sessions</code></a>
+    </li>
+   </ul>
+   <p>
+    All requests passing through session middleware are assigned a session, either an existing one, or a new empty session, known as a <em>pre-session</em>.
+   </p>
+   <p>
+    See example <a href="https://github.com/aantron/dream/tree/master/example/b-session#files"><code>b-session</code></a>.
+   </p>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-session">
+     <div class="backing"></div>
+     <a href="#val-session" class="anchor"></a><code><span><span class="keyword">val</span> session : <span>string <span class="arrow">-&gt;</span></span> <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> <span>string option</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Value from the request's session.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-put_session">
+     <div class="backing"></div>
+     <a href="#val-put_session" class="anchor"></a>
+<pre><span class="keyword">val</span> put_session :
+  string -&gt; string -&gt; <a href="#type-request">request</a> -&gt; unit <a href="#type-promise">promise</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Mutates a value in the request's session. The back end may commit the value to storage immediately, so this function returns a promise.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-all_session_values">
+     <div class="backing"></div>
+     <a href="#val-all_session_values" class="anchor"></a><code><span><span class="keyword">val</span> all_session_values : <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> <span><span>(string * string)</span> list</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Full session dictionary.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-invalidate_session">
+     <div class="backing"></div>
+     <a href="#val-invalidate_session" class="anchor"></a><code><span><span class="keyword">val</span> invalidate_session : <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> <span>unit <a href="#type-promise">promise</a></span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Invalidates the request's session, replacing it with a fresh, empty pre-session.
+     </p>
+    </div>
+   </div>
+   <h3 id="back-ends">
+    <div class="backing"></div>
+    <a href="#back-ends" class="anchor"></a>Back ends
+   </h3>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-memory_sessions">
+     <div class="backing"></div>
+     <a href="#val-memory_sessions" class="anchor"></a><code><span><span class="keyword">val</span> memory_sessions : <span>?lifetime:float <span class="arrow">-&gt;</span></span> <a href="#type-middleware">middleware</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Stores sessions in server memory. Passes session IDs to clients in cookies. Session data is lost when the server process exits.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-cookie_sessions">
+     <div class="backing"></div>
+     <a href="#val-cookie_sessions" class="anchor"></a><code><span><span class="keyword">val</span> cookie_sessions : <span>?lifetime:float <span class="arrow">-&gt;</span></span> <a href="#type-middleware">middleware</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Stores sessions in encrypted cookies. Pass <a href="#val-run"><code>Dream.run</code></a> <code>~secret</code> to be able to decrypt cookies from previous server runs.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-sql_sessions">
+     <div class="backing"></div>
+     <a href="#val-sql_sessions" class="anchor"></a><code><span><span class="keyword">val</span> sql_sessions : <span>?lifetime:float <span class="arrow">-&gt;</span></span> <a href="#type-middleware">middleware</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Stores sessions in an SQL database. Passes session IDs to clients in cookies. Must be used under <a href="#val-sql_pool"><code>Dream.sql_pool</code></a>. Expects a table
+     </p>
+     <pre>CREATE TABLE dream_session (
+  id TEXT PRIMARY KEY,
+  label TEXT NOT NULL,
+  expires_at REAL NOT NULL,
+  payload TEXT NOT NULL
+)</pre>
+    </div>
+   </div>
+   <h3 id="metadata">
+    <div class="backing"></div>
+    <a href="#metadata" class="anchor"></a>Metadata
+   </h3>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-session_id">
+     <div class="backing"></div>
+     <a href="#val-session_id" class="anchor"></a><code><span><span class="keyword">val</span> session_id : <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> string</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Secret value used to identify a client.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-session_label">
+     <div class="backing"></div>
+     <a href="#val-session_label" class="anchor"></a><code><span><span class="keyword">val</span> session_label : <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> string</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Tracing label suitable for printing to logs.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-session_expires_at">
+     <div class="backing"></div>
+     <a href="#val-session_expires_at" class="anchor"></a><code><span><span class="keyword">val</span> session_expires_at : <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> float</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Time at which the session will expire.
+     </p>
+    </div>
+   </div>
+   <h2 id="websockets">
+    <div class="backing"></div>
+    <a href="#websockets" class="anchor"></a>WebSockets
+   </h2>
+   <div class="odoc-spec">
+    <div class="spec type" id="type-websocket">
+     <div class="backing"></div>
+     <a href="#type-websocket" class="anchor"></a><code><span><span class="keyword">type</span> websocket</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      A WebSocket connection. See <a href="https://tools.ietf.org/html/rfc6455">RFC 6455</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API">MDN</a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-websocket">
+     <div class="backing"></div>
+     <a href="#val-websocket" class="anchor"></a>
+<pre><span class="keyword">val</span> websocket :
+  ?headers:(string * string) list -&gt;
+  (<a href="#type-websocket">websocket</a> -&gt; unit <a href="#type-promise">promise</a>) -&gt;
+    <a href="#type-response">response</a> <a href="#type-promise">promise</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Creates a fresh <code>101 Switching Protocols</code> response. Once this response is returned to Dream's HTTP layer, the callback is passed a new <a href="#type-websocket"><code>websocket</code></a>, and the application can begin using it. See example <a href="https://github.com/aantron/dream/tree/master/example/k-websocket#files"><code>k-websocket</code></a>.
+     </p>
+     <pre><code>let my_handler = fun request -&gt;
+  Dream.websocket (fun websocket -&gt;
+    let%lwt () = Dream.send "Hello, world!" websocket in
+    Dream.close_websocket websocket);</code></pre>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-send">
+     <div class="backing"></div>
+     <a href="#val-send" class="anchor"></a>
+<pre><span class="keyword">val</span> send :
+  ?kind:[ `Text | `Binary ] -&gt;
+    string -&gt; <a href="#type-websocket">websocket</a> -&gt; unit <a href="#type-promise">promise</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Sends a single message. The WebSocket is ready another message when the promise resolves.
+     </p>
+     <p>
+      With <code>~kind:`Text</code>, the default, the message is interpreted as a UTF-8 string. The client will receive it transcoded to JavaScript's UTF-16 representation.
+     </p>
+     <p>
+      With <code>~kind:`Binary</code>, the message will be received unmodified, as either a <code>Blob</code> or an <code>ArrayBuffer</code>. See <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/binaryType">MDN, <code>WebSocket.binaryType</code></a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-receive">
+     <div class="backing"></div>
+     <a href="#val-receive" class="anchor"></a><code><span><span class="keyword">val</span> receive : <span><a href="#type-websocket">websocket</a> <span class="arrow">-&gt;</span></span> <span><span>string option</span> <a href="#type-promise">promise</a></span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Retrieves a message. If the WebSocket is closed before a complete message arrives, the result is <code>None</code>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-close_websocket">
+     <div class="backing"></div>
+     <a href="#val-close_websocket" class="anchor"></a>
+<pre><span class="keyword">val</span> close_websocket :
+  ?code:int -&gt; <a href="#type-websocket">websocket</a> -&gt; unit <a href="#type-promise">promise</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Closes the WebSocket. <code>~code</code> is usually not necessary, but is needed for some protocols based on WebSockets. See <a href="https://tools.ietf.org/html/rfc6455#section-7.4">RFC 6455 §7.4</a>.
+     </p>
+    </div>
+   </div>
+   <h2 id="graphql">
+    <div class="backing"></div>
+    <a href="#graphql" class="anchor"></a>GraphQL
+   </h2>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-graphql">
+     <div class="backing"></div>
+     <a href="#val-graphql" class="anchor"></a>
+<pre><span class="keyword">val</span> graphql :
+  (<a href="#type-request">request</a> -&gt; 'a <a href="#type-promise">promise</a>) -&gt;
+  'a Graphql_lwt.Schema.schema -&gt;
+    <a href="#type-handler">handler</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      <code>Dream.graphql make_context schema</code> serves the GraphQL <code>schema</code>. Integrates <a href="https://github.com/andreas/ocaml-graphql-server#readme">ocaml-graphql-server</a>. See examples <a href="https://github.com/aantron/dream/tree/master/example/i-graphql#files"><code>i-graphql</code></a> and <a href="https://github.com/aantron/dream/tree/master/example/w-graphql-subscription#files"><code>w-graphql-subscription</code></a>.
+     </p>
+     <pre><code>let () =
+  Dream.run
+  @@ Dream.router [
+    Dream.post "/graphql"  (Dream.graphql Lwt.return schema);
+    Dream.get  "/graphiql" (Dream.graphiql "/graphql");
+  ]
+  @@ Dream.not_found</code></pre>
+     <p>
+      <code>make_context</code> is called by <a href="#val-graphql"><code>Dream.graphql</code></a> on every <a href="#type-request"><code>request</code></a> to create the <em>context</em>, a value that is passed to each resolver from the schema. Passing <code>Lwt.return</code>, the same as
+     </p>
+     <pre><code>fun request -&gt; Lwt.return request</code></pre>
+     <p>
+      causes the <a href="#type-request"><code>request</code></a> itself to be used as the context:
+     </p>
+     <pre><code>field "name"
+  ~doc:"User name"
+  ~typ:(non_null string)
+  ~args:Arg.[]
+  ~resolve:(fun info user -&gt;
+    (* The context is in info.ctx *)
+    user.name);</code></pre>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-graphiql">
+     <div class="backing"></div>
+     <a href="#val-graphiql" class="anchor"></a><code><span><span class="keyword">val</span> graphiql : <span>string <span class="arrow">-&gt;</span></span> <a href="#type-handler">handler</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Serves <a href="https://github.com/graphql/graphiql/tree/main/packages/graphiql#readme">GraphiQL</a>, a GraphQL query editor. The string gives the GraphQL endpoint that the editor will work with.
+     </p>
+    </div>
+   </div>
+   <h2 id="sql">
+    <div class="backing"></div>
+    <a href="#sql" class="anchor"></a>SQL
+   </h2>
+   <p>
+    Dream provides thin convenience functions over <a href="https://github.com/paurkedal/ocaml-caqti/#readme">Caqti</a>, an SQL interface with several back ends. See example <a href="https://github.com/aantron/dream/tree/master/example/h-sql#files"><code>h-sql</code></a>.
+   </p>
+   <p>
+    Dream installs the core <a href="https://opam.ocaml.org/packages/caqti/"><code>caqti</code></a> package, but you should also install at least one of:
+   </p>
+   <ul>
+    <li>
+     <a href="https://opam.ocaml.org/packages/caqti-driver-sqlite3/"><code>caqti-driver-sqlite3</code></a>
+    </li>
+    <li>
+     <a href="https://opam.ocaml.org/packages/caqti-driver-postgresql/"><code>caqti-driver-postgresql</code></a>
+    </li>
+    <li>
+     <a href="https://opam.ocaml.org/packages/caqti-driver-mariadb/"><code>caqti-driver-mariadb</code></a>
+    </li>
+   </ul>
+   <p>
+    They are separated because each has its own system library dependencies. Regardless of which you install, usage on the OCaml level is the same. The differences are in SQL syntax, and in external SQL server or file setup. See
+   </p>
+   <ul>
+    <li>
+     <a href="https://sqlite.org/lang.html">SQLite3, <i>SQL As Understood By SQLite</i></a>
+    </li>
+    <li>
+     <a href="https://www.postgresql.org/docs/13/sql.html">PostgreSQL, <i>The SQL Language</i></a>
+    </li>
+    <li>
+     <a href="https://mariadb.com/kb/en/sql-statements-structure/">MariaDB, <i>SQL Statements &amp; Structure</i></a>
+    </li>
+   </ul>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-sql_pool">
+     <div class="backing"></div>
+     <a href="#val-sql_pool" class="anchor"></a><code><span><span class="keyword">val</span> sql_pool : <span>?size:int <span class="arrow">-&gt;</span></span> <span>string <span class="arrow">-&gt;</span></span> <a href="#type-middleware">middleware</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Makes an SQL connection pool available to its inner handler.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-sql">
+     <div class="backing"></div>
+     <a href="#val-sql" class="anchor"></a>
+<pre><span class="keyword">val</span> sql :
+  (Caqti_lwt.connection -&gt; 'a <a href="#type-promise">promise</a>) -&gt; <a href="#type-request">request</a> -&gt;
+    'a <a href="#type-promise">promise</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Runs the callback with a connection from the SQL pool. See example <a href="https://github.com/aantron/dream/tree/master/example/h-sql#files"><code>h-sql</code></a>.
+     </p>
+     <pre><code>let () =
+  Dream.run
+  @@ Dream.sql_pool "sqlite3://db.sqlite"
+  @@ fun request -&gt;
+    request |&gt; Dream.sql (fun db -&gt;
+      (* ... *))</code></pre>
+    </div>
+   </div>
+   <h2 id="logging">
+    <div class="backing"></div>
+    <a href="#logging" class="anchor"></a>Logging
+   </h2>
+   <p>
+    Dream uses the <a href="https://erratique.ch/software/logs/doc/Logs/index.html">Logs</a> library internally, and integrates with all other libraries in your project that are also using it. Dream provides a slightly simplified interface to Logs.
+   </p>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-logger">
+     <div class="backing"></div>
+     <a href="#val-logger" class="anchor"></a><code><span><span class="keyword">val</span> logger : <a href="#type-middleware">middleware</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Logs and times requests. Time spent logging is included. See example <a href="https://github.com/aantron/dream/tree/master/example/2-middleware#files"><code>2-middleware</code></a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-log">
+     <div class="backing"></div>
+     <a href="#val-log" class="anchor"></a><code><span><span class="keyword">val</span> log : <span><span><span>(<span class="type-var">'a</span>,&nbsp;Format.formatter,&nbsp;unit,&nbsp;unit)</span> format4</span> <span class="arrow">-&gt;</span></span> <span class="type-var">'a</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Formats a message and logs it. Disregard the obfuscated type: the first argument is a format string as described in the standard library modules <a href="http://caml.inria.fr/pub/docs/manual-ocaml/libref/Printf.html#VALfprintf"><code>Printf</code></a> and <a href="http://caml.inria.fr/pub/docs/manual-ocaml/libref/Format.html#VALfprintf"><code>Format</code></a>. The rest of the arguments are determined by the format string. See example <a href="https://github.com/aantron/dream/tree/master/example/a-log#files"><code>a-log</code></a>.
+     </p>
+     <pre><code>Dream.log "Counter is now: %i" counter;
+Dream.log "Client: %s" (Dream.client request);</code></pre>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec type" id="type-conditional_log">
+     <div class="backing"></div>
+     <a href="#type-conditional_log" class="anchor"></a>
+<pre class="compact"><span class="keyword">type</span> ('a, 'b) conditional_log =
+  ((?request:<a href="#type-request">request</a> -&gt;
+   ('a, Format.formatter, unit, 'b) format4 -&gt; 'a) -&gt; 'b) -&gt;
+    unit
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Loggers. This type is difficult to read — instead, see <a href="#val-error"><code>Dream.error</code></a> for usage.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec type" id="type-log_level">
+     <div class="backing"></div>
+     <a href="#type-log_level" class="anchor"></a>
+<code><span class="keyword">type</span> log_level = [ `Error | `Warning | `Info | `Debug ]</code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Log levels, in order from most urgent to least.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-error">
+     <div class="backing"></div>
+     <a href="#val-error" class="anchor"></a>
+<code><span><span class="keyword">val</span> error &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <span><span>(<span class="type-var">'a</span>,&nbsp;unit)</span> <a href="#type-conditional_log">conditional_log</a></span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Formats a message and writes it to the log at level <code>`Error</code>. The inner formatting function is called only if the <a href="#val-initialize_log">current log level</a> is <code>`Error</code> or higher. See example <a href="https://github.com/aantron/dream/tree/master/example/a-log#files"><code>a-log</code></a>.
+     </p>
+     <pre><code>Dream.error (fun log -&gt;
+  log ~request "My message, details: %s" details);</code></pre>
+     <p>
+      Pass the optional argument <code>~request</code> to <a href="#val-error"><code>Dream.error</code></a> to associate the message with a specific request. If not passed, <a href="#val-error"><code>Dream.error</code></a> will try to guess the request. This usually works, but not always.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-warning">
+     <div class="backing"></div>
+     <a href="#val-warning" class="anchor"></a>
+<code><span><span class="keyword">val</span> warning &nbsp;&nbsp;&nbsp;: <span><span>(<span class="type-var">'a</span>,&nbsp;unit)</span> <a href="#type-conditional_log">conditional_log</a></span></span></code>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-info">
+     <div class="backing"></div>
+     <a href="#val-info" class="anchor"></a>
+<code><span><span class="keyword">val</span> info &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <span><span>(<span class="type-var">'a</span>,&nbsp;unit)</span> <a href="#type-conditional_log">conditional_log</a></span></span></code>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-debug">
+     <div class="backing"></div>
+     <a href="#val-debug" class="anchor"></a>
+<code><span><span class="keyword">val</span> debug &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <span><span>(<span class="type-var">'a</span>,&nbsp;unit)</span> <a href="#type-conditional_log">conditional_log</a></span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Like <a href="#val-error"><code>Dream.error</code></a>, but for each of the other <a href="#type-log_level">log levels</a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec type" id="type-sub_log">
+     <div class="backing"></div>
+     <a href="#type-sub_log" class="anchor"></a>
+<pre class="compact"><span class="keyword">type</span> sub_log = {
+  error   <span class="of">:</span> 'a. ('a, unit) <a href="#type-conditional_log">conditional_log</a>;
+  warning <span class="of">:</span> 'a. ('a, unit) <a href="#type-conditional_log">conditional_log</a>;
+  info    <span class="of">:</span> 'a. ('a, unit) <a href="#type-conditional_log">conditional_log</a>;
+  debug   <span class="of">:</span> 'a. ('a, unit) <a href="#type-conditional_log">conditional_log</a>;
+}
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Sub-logs. See <a href="#val-sub_log"><code>Dream.sub_log</code></a> right below.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-sub_log">
+     <div class="backing"></div>
+     <a href="#val-sub_log" class="anchor"></a><code><span><span class="keyword">val</span> sub_log : <span>string <span class="arrow">-&gt;</span></span> <a href="#type-sub_log">sub_log</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Creates a new sub-log with the given name. For example,
+     </p>
+     <pre><code>let log = Dream.sub_log "myapp.ajax"</code></pre>
+     <p>
+      ...creates a logger that can be used like <a href="#val-error"><code>Dream.error</code></a> and the other default loggers, but prefixes <code>"myapp.ajax"</code> to each log message.
+     </p>
+     <pre><code>log.error (fun log -&gt; log ~request "Validation failed")</code></pre>
+     <p>
+      See <code>README</code> of example <a href="https://github.com/aantron/dream/tree/master/example/a-log#files"><code>a-log</code></a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-initialize_log">
+     <div class="backing"></div>
+     <a href="#val-initialize_log" class="anchor"></a>
+<pre><span class="keyword">val</span> initialize_log :
+  <span class="optional">?backtraces:bool -&gt;
+  ?async_exception_hook:bool -&gt;
+  ?level:<a href="#type-log_level">log_level</a> -&gt;
+  ?enable:bool -&gt;</span>
+    unit -&gt; unit
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Initializes Dream's log with the given settings.
+     </p>
+     <p>
+      Dream initializes its logging back end lazily. This is so that if a Dream Web app is linked into a larger binary, it does not affect that binary's runtime unless the Web app runs.
+     </p>
+     <p>
+      This also allows the Web app to give logging settings explicitly by calling <a href="#val-initialize_log"><code>Dream.initialize_log</code></a> early in program execution.
+     </p>
+     <ul>
+      <li>
+       <code>~backtraces:true</code>, the default, causes Dream to call <a href="http://caml.inria.fr/pub/docs/manual-ocaml/libref/Printexc.html#VALrecord_backtrace"><code>Printexc.record_backtrace</code></a>, which makes exception backtraces available.
+      </li>
+     </ul>
+     <ul>
+      <li>
+       <code>~async_exception_hook:true</code>, the default, causes Dream to set <a href="https://ocsigen.org/lwt/latest/api/Lwt#VALasync_exception_hook"><code>Lwt.async_exception_hook</code></a> so as to forward all asynchronous exceptions to the logger, and not terminate the process.
+      </li>
+     </ul>
+     <ul>
+      <li>
+       <code>~level</code> sets the log level threshould for the entire binary. The default is <code>`Info</code>.
+      </li>
+     </ul>
+     <ul>
+      <li>
+       <code>~enable:false</code> disables Dream logging completely. This can help sanitize output during testing.
+      </li>
+     </ul>
+    </div>
+   </div>
+   <h2 id="errors">
+    <div class="backing"></div>
+    <a href="#errors" class="anchor"></a>Errors
+   </h2>
+   <p>
+    Dream passes all errors to a single error handler, including...
+   </p>
+   <ul>
+    <li>
+     exceptions and rejected promises from the application,
+    </li>
+    <li>
+     <code>4xx</code> and <code>5xx</code> responses from the application, and
+    </li>
+    <li>
+     lower-level errors, such as TLS handshake failures and malformed HTTP requests.
+    </li>
+   </ul>
+   <p>
+    This allows customizing error handling in one place. Including low-level errors prevents leakage of strings in automatic responses not under the application's control, for full internationalization.
+   </p>
+   <p>
+    Use <a href="#val-error_template"><code>Dream.error_template</code></a> and pass the result to <a href="#val-run"><code>Dream.run</code></a> <code>~error_handler</code> to customize the error template.
+   </p>
+   <p>
+    The default error handler logs errors and its template generates completely empty responses, to avoid internationalization issues.
+   </p>
+   <p>
+    For full control over error handling, including logging, you can define an <a href="#type-error_handler"><code>error_handler</code></a> directly.
+   </p>
+   <div class="odoc-spec">
+    <div class="odoc-spec">
+     <div class="multiline spec value" id="val-error_template">
+      <div class="backing"></div>
+      <a href="#val-error_template" class="anchor"></a>
+<pre><span class="keyword">val</span> error_template :
+  (string option -&gt; <a href="#val-response">response</a> -&gt; <a href="#val-response">response</a> <a href="#type-promise">promise</a>) -&gt;
+    <a href="#type-error_handler">error_handler</a>
+</pre>
+     </div>
+     <div class="spec-doc">
+      <p>
+       Builds an <a href="#type-error_handler"><code>error_handler</code></a> from a template. See example <a href="https://github.com/aantron/dream/tree/master/example/9-error#files"><code>9-error</code></a>.
+      </p>
+      <pre><code>let my_error_handler =
+  Dream.error_template (fun ~debug_dump response -&gt;
+    let body =
+      match debug_dump with
+      | Some string -&gt; Dream.html_escape string
+      | None -&gt; Dream.status_to_string (Dream.status response)
+    in
+
+    response
+    |&gt; Dream.with_body body
+    |&gt; Lwt.return)</code></pre>
+      <p>
+       The error's context suggests <code>response</code>. Usually, it's only valid field is <a href="#val-status"><code>Dream.status</code></a>.
+      </p>
+      <ul>
+       <li>
+        If the error is an exception or rejection from the application, the status is usually <code>500 Internal Server Error</code>.
+       </li>
+       <li>
+        In case of a <code>4xx</code> or <code>5xx</code> response from the application, that response itself is passed to the template.
+       </li>
+       <li>
+        For low-level errors, the status is typically either <code>400 Bad Request</code> if the error was likely caused by the client, and <code>500 Internal Server Error</code> if likely caused by the server.
+       </li>
+      </ul>
+      <p>
+       If <code>~debug</code> was passed to <a href="#val-run"><code>Dream.run</code></a>, <code>~debug_dump</code> will be <code>Some info</code>, where <code>info</code> is a multi-line string containing an error description, stack trace, request state, and other information.
+      </p>
+      <p>
+       When an error occurs in a context where a response is not possible, the template is not called. In some contexts where the template is called, the status code is hardcoded, but the headers and body from the template's response will still be used.
+      </p>
+      <p>
+       If the template itself raises an exception or rejects, an empty <code>500
+    Internal Server Error</code> will be sent in contexts that require a response.
+      </p>
+     </div>
+    </div>
+    <div class="multiline spec type" id="type-error">
+     <div class="backing"></div>
+     <a href="#type-error" class="anchor"></a>
+<pre class="compact"><span class="keyword">type</span> error = {
+  condition <span class="of">:</span> [
+    | `Response of <a href="#type-response">response</a>
+    | `String of string
+    | `Exn of exn
+  ];
+  layer     <span class="of">:</span> [ `App | `HTTP | `HTTP2 | `TLS | `WebSocket ];
+  caused_by <span class="of">:</span> [ `Server | `Client ];
+  request   <span class="of">:</span> <a href="#type-request">request</a>  option;
+  response  <span class="of">:</span> <a href="#type-response">response</a> option;
+  client    <span class="of">:</span> string   option;
+  severity  <span class="of">:</span> <a href="#type-log_level">log_level</a>;
+  debug     <span class="of">:</span> bool;
+  will_send_response <span class="of">:</span> bool;
+}
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Detailed errors. Ignore this type if only using <a href="#val-error_template"><code>Dream.error_template</code></a>.
+     </p>
+     <ul>
+      <li>
+       <p>
+        <code>condition</code> describes the error itself.
+       </p>
+       <ul>
+        <li>
+         <code>`Response</code> is a <code>4xx</code> or <code>5xx</code> response.
+        </li>
+        <li>
+         <code>`Exn</code> is a caught exception.
+        </li>
+        <li>
+         <code>`String</code> is an error that has only an English-language description.
+        </li>
+       </ul>
+       <p>
+        The default error handler logs <code>`Exn</code> and <code>`Strings</code>, but not <code>`Response</code>. <code>`Response</code> is assumed to be deliberate, and already logged by <a href="#val-logger"><code>Dream.logger</code></a>.
+       </p>
+      </li>
+      <li>
+       <p>
+        <code>layer</code> is which part of the Dream stack detected the error.
+       </p>
+       <ul>
+        <li>
+         <code>`App</code> is for application exceptions, rejections, and <code>4xx</code>, <code>5xx</code> responses.
+        </li>
+        <li>
+         <code>`HTTP</code> and <code>`HTTP2</code> are for low-level HTTP protocol errors.
+        </li>
+        <li>
+         <code>`TLS</code> is for low-level TLS errors.
+        </li>
+        <li>
+         <code>`WebSocket</code> is for WebSocket errors.
+        </li>
+       </ul>
+       <p>
+        The default error handler uses this to just prepend a prefix to its log messages.
+       </p>
+      </li>
+      <li>
+       <p>
+        <code>caused_by</code> is the party likely to have caused the error.
+       </p>
+       <ul>
+        <li>
+         <code>`Server</code> errors suggest bugs, and correspond to <code>5xx</code> responses.
+        </li>
+        <li>
+         <code>`Client</code> errors suggest user errors, network failure, buggy clients, and sometimes attacks. They correspond to <code>4xx</code> responses.
+        </li>
+       </ul>
+      </li>
+      <li>
+       <p>
+        <code>request</code> is a <a href="#type-request"><code>request</code></a> associated with the error, if there is one.
+       </p>
+       <p>
+        As examples, a request might not be available if the error is a failure to parse an HTTP/1.1 request at all, or failure to perform a TLS handshake.
+       </p>
+       <p>
+        In case of a <code>`WebSocket</code> error, the request is the client's original request to establish the WebSocket connection.
+       </p>
+      </li>
+      <li>
+       <p>
+        <code>response</code> is a <a href="#type-response"><code>response</code></a> that was either generated by the application, or suggested by the error context.
+       </p>
+       <p>
+        In case of a <code>`WebSocket</code> error, the response is the application's original connection agreement response created by <a href="#val-websocket"><code>Dream.websocket</code></a>.
+       </p>
+       <p>
+        See <a href="#val-error_template"><code>Dream.error_template</code></a>.
+       </p>
+      </li>
+      <li>
+       <code>client</code> is the client's address, if available. For example, <code>127.0.0.1:56001</code>.
+      </li>
+      <li>
+       Suggested <a href="#type-log_level">log level</a> for the error. Usually <code>`Error</code> for <code>`Server</code> errors and <code>`Warning</code> for client errors.
+      </li>
+      <li>
+       <p>
+        <code>debug</code> is <code>true</code> if <a href="#val-run"><code>Dream.run</code></a> was called with <code>~debug</code>.
+       </p>
+       <p>
+        If so, the default error handler gathers various fields from any available request, formats the error condition, and passes the resulting string to the template.
+       </p>
+       <p>
+        The default template shows this string in its repsonse, instead of returning a response with no body.
+       </p>
+      </li>
+      <li>
+       <p>
+        <code>will_send_response</code> is <code>true</code> in error contexts where Dream will still send a response.
+       </p>
+       <p>
+        The default handler calls the error template only if <code>will_send_response</code> is <code>true</code>.
+       </p>
+      </li>
+     </ul>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec type" id="type-error_handler">
+     <div class="backing"></div>
+     <a href="#type-error_handler" class="anchor"></a><code><span><span class="keyword">type</span> error_handler</span><span> = <span><a href="#type-error">error</a> <span class="arrow">-&gt;</span></span> <span><span><a href="#type-response">response</a> option</span> <a href="#type-promise">promise</a></span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Error handlers log errors and convert them into responses. Ignore if using <a href="#val-error_template"><code>Dream.error_template</code></a>.
+     </p>
+     <p>
+      If the error has <code>will_send_response = true</code>, the error handler must return a response. Otherwise, it should return <code>None</code>.
+     </p>
+     <p>
+      If an error handler raises an exception or rejects, Dream logs this secondary failure. If the error context needs a response, Dream responds with an empty <code>500 Internal Server Error</code>.
+     </p>
+     <p>
+      The behavior of Dream's default error handler is described at <a href="#type-error"><code>Dream.error</code></a>.
+     </p>
+    </div>
+   </div>
+   <h2 id="servers">
+    <div class="backing"></div>
+    <a href="#servers" class="anchor"></a>Servers
+   </h2>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-run">
+     <div class="backing"></div>
+     <a href="#val-run" class="anchor"></a>
+<pre><span class="keyword">val</span> run :
+  <span class="optional">?interface:string -&gt;
+  ?port:int -&gt;
+  ?stop:unit <a href="#type-promise">promise</a> -&gt;
+  ?debug:bool -&gt;
+  ?error_handler:<a href="#type-error_handler">error_handler</a> -&gt;
+  ?secret:string -&gt;
+  ?old_secrets:string list -&gt;
+  ?prefix:string -&gt;
+  ?https:true -&gt;
+  ?certificate_file:string -&gt;
+  ?key_file:string -&gt;
+  ?builtins:bool -&gt;
+  ?greeting:bool -&gt;
+  ?stop_on_input:bool -&gt;
+  ?graceful_stop:bool -&gt;
+  ?adjust_terminal:bool -&gt;</span>
+    <a href="#type-handler">handler</a> -&gt; unit
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Runs the Web application represented by the <a href="#type-handler"><code>handler</code></a>, by default at <a href="http://localhost:8080">http://localhost:8080</a>.
+     </p>
+     <p>
+      This function calls <a href="https://ocsigen.org/lwt/latest/api/Lwt_main#VALrun"><code>Lwt_main.run</code></a> internally, so it is intended to be the main loop of a program. <a href="#val-serve"><code>Dream.serve</code></a> is a version that does not call <code>Lwt_main.run</code>.
+     </p>
+     <ul>
+      <li>
+       <code>~interface</code> is the network interface to listen on. Defaults to <code>"localhost"</code>. Use <code>"0.0.0.0"</code> to listen on all interfaces.
+      </li>
+      <li>
+       <code>~port</code> is the port to listen on. Defaults to <code>8080</code>.
+      </li>
+      <li>
+       <code>~stop</code> is a promise that causes the server to stop accepting new requests, and <a href="#val-run"><code>Dream.run</code></a> to return. Requests that have already entered the Web application continue to be processed. The default value is a promise that never resolves. However, see also <code>~stop_on_input</code>.
+      </li>
+      <li>
+       <code>~debug:true</code> enables debug information in error templates. See <a href="#val-error_template"><code>Dream.error_template</code></a>. The default is <code>false</code>, to prevent accidental deployment with debug output turned on. See example <a href="https://github.com/aantron/dream/tree/master/example/8-debug#files"><code>8-debug</code></a>.
+      </li>
+      <li>
+       <code>~error_handler</code> handles all errors, both from the application, and low-level errors. See <a href="#errors">Errors</a> and example <a href="https://github.com/aantron/dream/tree/master/example/9-error#files"><code>9-error</code></a>.
+      </li>
+      <li>
+       <p>
+        <code>~secret</code> is a key to be used for cryptographic operations, such as signing CSRF tokens. By default, a random secret is generated on each call to <a href="#val-run"><code>Dream.run</code></a>. Generate a 256-bit key for production with
+       </p>
+       <pre><code>Dream.to_base64url (Dream.random 32)</code></pre>
+       <p>
+        and load it from file or an environment variable.
+       </p>
+      </li>
+      <li>
+       <code>~old_secrets</code> is a list of previous secrets that can still be used for decryption, but not for encryption. This is intended for key rotation.
+      </li>
+      <li>
+       <code>~prefix</code> is a site prefix for applications that are not running at the root (<code>/</code>) of their domain. The default is <code>"/"</code>, for no prefix.
+      </li>
+      <li>
+       <code>~https:true</code> enables HTTPS. You should also specify <code>~certificate_file</code> and <code>~key_file</code>. However, for development, Dream includes an insecure compiled-in <a href="https://github.com/aantron/dream/tree/master/src/certificate#files">localhost certificate</a>. Enabling HTTPS also enables transparent upgrading of connections to HTTP/2. See example <a href="https://github.com/aantron/dream/tree/master/example/l-https#files"><code>l-https</code></a>.
+      </li>
+      <li>
+       <code>~certificate_file</code> and <code>~key_file</code> specify the certificate and key file, respectively, when using <code>~https</code>. They are not required for development, but are required for production. Dream will write a warning to the log if you are using <code>~https</code>, don't provide <code>~certificate_file</code> and <code>~key_file</code>, and <code>~interface</code> is not <code>"localhost"</code>.
+      </li>
+      <li>
+       <code>~builtins:false</code> disables <a href="#builtin">Built-in middleware</a>.
+      </li>
+     </ul>
+     <p>
+      The remaining arguments, can be used to gradually disable convenience features of <code>Dream.run</code>. Once all are disabled, you may want to switch to using <a href="#val-serve"><code>Dream.serve</code></a>.
+     </p>
+     <ul>
+      <li>
+       <code>~greeting:false</code> disables the start-up log message that prints a link to the Web application.
+      </li>
+      <li>
+       <code>~stop_on_input:false</code> disables stopping the server on input on STDIN.
+      </li>
+      <li>
+       <code>~graceful_stop:false</code> disables waiting for one second after stop, before exiting from <code>Dream.run</code>.
+      </li>
+      <li>
+       <code>~adjust_terminal:false</code> disables adjusting the terminal to disable echo and line wrapping.
+      </li>
+     </ul>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-serve">
+     <div class="backing"></div>
+     <a href="#val-serve" class="anchor"></a>
+<pre><span class="keyword">val</span> serve :
+  <span class="optional">?interface:string -&gt;
+  ?port:int -&gt;
+  ?stop:unit <a href="#type-promise">promise</a> -&gt;
+  ?debug:bool -&gt;
+  ?error_handler:<a href="#type-error_handler">error_handler</a> -&gt;
+  ?secret:string -&gt;
+  ?old_secrets:string list -&gt;
+  ?prefix:string -&gt;
+  ?https:bool -&gt;
+  ?certificate_file:string -&gt;
+  ?key_string:string -&gt;
+  ?builtins:bool -&gt;</span>
+    <a href="#type-handler">handler</a> -&gt; unit <a href="#type-promise">promise</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Like <a href="#val-run"><code>Dream.run</code></a>, but returns a promise that does not resolve until the server stops listening, instead of calling <a href="https://ocsigen.org/lwt/latest/api/Lwt_main#VALrun"><code>Lwt_main.run</code></a>.
+     </p>
+     <p>
+      This function is meant for integrating Dream applications into larger programs that have their own procedures for starting and stopping the Web server.
+     </p>
+     <p>
+      All arguments have the same meanings as they have in <a href="#val-run"><code>Dream.run</code></a>.
+     </p>
+    </div>
+   </div>
+   <h3 id="builtin">
+    <div class="backing"></div>
+    <a href="#builtin" class="anchor"></a>Built-in middleware
+   </h3>
+   <p>
+    Built-in middleware is Dream functionality that is implemented as middleware for maintainability reasons. It is necessary for Dream to work correctly. However, because it is middleware, Dream allows replacing it with <a href="#val-run"><code>Dream.run</code></a> <code>~builtins:false</code>. The middleware is applied in documented order, so
+   </p>
+   <pre><code>Dream.run my_app</code></pre>
+   <p>
+    is the same as
+   </p>
+   <pre><code>Dream.run ~builtins:false
+@@ Dream.lowercase_headers
+@@ Dream.content_length
+@@ Dream.catch (* ... *)
+@@ Dream.assign_request_id
+@@ Dream.chop_site_prefix
+@@ my_app</code></pre>
+   <p>
+    The middleware can be replaced with work-alikes, or omitted to use Dream as a fairly raw abstraction layer over low-level HTTP libraries.
+   </p>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-lowercase_headers">
+     <div class="backing"></div>
+     <a href="#val-lowercase_headers" class="anchor"></a><code><span><span class="keyword">val</span> lowercase_headers : <a href="#type-middleware">middleware</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Lowercases response headers for HTTP/2 requests.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-content_length">
+     <div class="backing"></div>
+     <a href="#val-content_length" class="anchor"></a><code><span><span class="keyword">val</span> content_length : <a href="#type-middleware">middleware</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      If the request has <a href="#val-version"><code>Dream.version</code></a> <code>(1, _)</code>, then...
+     </p>
+     <ul>
+      <li>
+       if the response does not have <code>Content-Length:</code> and the body is a string, sets <code>Content-Length:</code> to the string's length, or
+      </li>
+      <li>
+       if the response does not have <code>Transfer-Encoding:</code> and the body is a stream, sets <code>Transfer-Encoding: chunked</code>.
+      </li>
+     </ul>
+     <p>
+      This is built in because an application cannot be expected to decide including these headers in the face of transparent HTTP/2 upgrades. The headers are necessary in HTTP/1, and forbidden or redundant and difficult to use in HTTP/2.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-catch">
+     <div class="backing"></div>
+     <a href="#val-catch" class="anchor"></a><code><span><span class="keyword">val</span> catch : <span><span>(<span><a href="#type-error">error</a> <span class="arrow">-&gt;</span></span> <span><a href="#type-response">response</a> <a href="#type-promise">promise</a></span>)</span> <span class="arrow">-&gt;</span></span> <a href="#type-middleware">middleware</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Forwards exceptions, rejections, and <code>4xx</code>, <code>5xx</code> responses from the application to the error handler. See <a href="#errors">Errors</a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-assign_request_id">
+     <div class="backing"></div>
+     <a href="#val-assign_request_id" class="anchor"></a><code><span><span class="keyword">val</span> assign_request_id : <a href="#type-middleware">middleware</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Assigns an id to each request.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-chop_site_prefix">
+     <div class="backing"></div>
+     <a href="#val-chop_site_prefix" class="anchor"></a><code><span><span class="keyword">val</span> chop_site_prefix : <span>string <span class="arrow">-&gt;</span></span> <a href="#type-middleware">middleware</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Removes <a href="#val-run"><code>Dream.run</code></a> <code>~prefix</code> from the path in each request, and adds it to the request prefix. Responds with <code>502 Bad Gateway</code> if the path does not have the expected prefix.
+     </p>
+    </div>
+   </div>
+   <h2 id="web_formats">
+    <div class="backing"></div>
+    <a href="#web_formats" class="anchor"></a>Web formats
+   </h2>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-html_escape">
+     <div class="backing"></div>
+     <a href="#val-html_escape" class="anchor"></a><code><span><span class="keyword">val</span> html_escape : <span>string <span class="arrow">-&gt;</span></span> string</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Escapes a string so that it is suitable for use as text inside HTML elements and quoted attribute values. Implements <a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html#rule-1-html-encode-before-inserting-untrusted-data-into-html-element-content">OWASP <i>Cross Site Scripting Prevention Cheat Sheet RULE #1</i></a>.
+     </p>
+     <p>
+      This function is <em>not</em> suitable for use with unquoted attributes, inline scripts, or inline CSS. See <i>Security</i> in example <a href="https://github.com/aantron/dream/tree/master/example/7-template#security"><code>7-template</code></a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-to_base64url">
+     <div class="backing"></div>
+     <a href="#val-to_base64url" class="anchor"></a><code><span><span class="keyword">val</span> to_base64url : <span>string <span class="arrow">-&gt;</span></span> string</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Converts the given string its base64url encoding, as specified in <a href="https://tools.ietf.org/html/rfc4648#section-5">RFC 4648 §5</a>, using a Web-safe alphabet and no padding. The resulting string can be used without escaping in URLs, form data, cookies, HTML content, attributes, and JavaScript code. For more options, see the <a href="https://mirage.github.io/ocaml-base64/base64/Base64/index.html">Base64</a> library.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-from_base64url">
+     <div class="backing"></div>
+     <a href="#val-from_base64url" class="anchor"></a><code><span><span class="keyword">val</span> from_base64url : <span>string <span class="arrow">-&gt;</span></span> <span>string option</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Inverse of <a href="#val-to_base64url"><code>Dream.to_base64url</code></a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-to_percent_encoded">
+     <div class="backing"></div>
+     <a href="#val-to_percent_encoded" class="anchor"></a>
+<pre><span class="keyword">val</span> to_percent_encoded :
+  ?international:bool -&gt; string -&gt; string
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Percent-encodes a string for use inside a URL.
+     </p>
+     <p>
+      <code>~international</code> is <code>true</code> by default, and causes non-ASCII bytes to be preserved. This is suitable for display to users, including in <code>&lt;a href=""&gt;</code> attributes, which are displayed in browser status lines. See <a href="https://tools.ietf.org/html/rfc3987">RFC 3987</a>.
+     </p>
+     <p>
+      Use <code>~international:false</code> for compatibility with legacy systems, or when constructing URL fragments from untrusted input that may not match the interface language(s) the user expects. In the latter case, similar letters from different writing scripts can be used to mislead users about the targets of links.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-from_percent_encoded">
+     <div class="backing"></div>
+     <a href="#val-from_percent_encoded" class="anchor"></a><code><span><span class="keyword">val</span> from_percent_encoded : <span>string <span class="arrow">-&gt;</span></span> string</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Inverse of <a href="#val-to_percent_encoded"><code>Dream.to_percent_encoded</code></a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-to_form_urlencoded">
+     <div class="backing"></div>
+     <a href="#val-to_form_urlencoded" class="anchor"></a><code><span><span class="keyword">val</span> to_form_urlencoded : <span><span><span>(string * string)</span> list</span> <span class="arrow">-&gt;</span></span> string</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Inverse of <a href="#val-from_form_urlencoded"><code>Dream.from_form_urlencoded</code></a>. Percent-encodes names and values.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-from_form_urlencoded">
+     <div class="backing"></div>
+     <a href="#val-from_form_urlencoded" class="anchor"></a><code><span><span class="keyword">val</span> from_form_urlencoded : <span>string <span class="arrow">-&gt;</span></span> <span><span>(string * string)</span> list</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Converts form data or a query string from <code>application/x-www-form-urlencoded</code> format to a list of name-value pairs. See <a href="https://tools.ietf.org/html/rfc1866#section-8.2.1">RFC 1866 §8.2.1</a>. Reverses the percent-encoding of names and values.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-from_cookie">
+     <div class="backing"></div>
+     <a href="#val-from_cookie" class="anchor"></a><code><span><span class="keyword">val</span> from_cookie : <span>string <span class="arrow">-&gt;</span></span> <span><span>(string * string)</span> list</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Converts a <code>Cookie:</code> header value to key-value pairs. See <a href="https://tools.ietf.org/html/draft-ietf-httpbis-rfc6265bis-07#section-4.2.1">RFC 6265bis §4.2.1</a>. Does not apply any decoding to names and values.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-to_set_cookie">
+     <div class="backing"></div>
+     <a href="#val-to_set_cookie" class="anchor"></a>
+<pre><span class="keyword">val</span> to_set_cookie :
+  ?expires:float -&gt;
+  ?max_age:float -&gt;
+  ?domain:string -&gt;
+  ?path:string -&gt;
+  ?secure:bool -&gt;
+  ?http_only:bool -&gt;
+  ?same_site:[ `Strict | `Lax | `None ] -&gt;
+    string -&gt; string -&gt; string
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      <code>Dream.to_set_cookie name value</code> formats a <code>Set-Cookie:</code> header value. The optional arguments correspond to the attributes specified in <a href="https://tools.ietf.org/html/draft-ietf-httpbis-rfc6265bis-07#section-5.3">RFC 6265bis §5.3</a>, and are documented at <a href="#val-set_cookie"><code>Dream.set_cookie</code></a>.
+     </p>
+     <p>
+      Does not apply any encoding to names and values. Be sure to encode so that names and values cannot contain `=`, `;`, or newline characters.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-from_target">
+     <div class="backing"></div>
+     <a href="#val-from_target" class="anchor"></a><code><span><span class="keyword">val</span> from_target : <span>string <span class="arrow">-&gt;</span></span> string * string</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Splits a request target into a path and a query string.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-from_target_path">
+     <div class="backing"></div>
+     <a href="#val-from_target_path" class="anchor"></a><code><span><span class="keyword">val</span> from_target_path : <span>string <span class="arrow">-&gt;</span></span> <span>string list</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Splits the string into components on <code>/</code> and percent-decodes each component. Empty components are dropped, except for the last. This function does not distinguish between absolute and relative paths, and is only meant for routes and request targets. So,
+     </p>
+     <ul>
+      <li>
+       <code>Dream.from_path ""</code> becomes <code>[]</code>.
+      </li>
+      <li>
+       <code>Dream.from_path "/"</code> becomes <code>[""]</code>.
+      </li>
+      <li>
+       <code>Dream.from_path "abc"</code> becomes <code>["abc"]</code>.
+      </li>
+      <li>
+       <code>Dream.from_path "/abc"</code> becomes <code>["abc"]</code>.
+      </li>
+      <li>
+       <code>Dream.from_path "abc/"</code> becomes <code>["abc"; ""]</code>.
+      </li>
+      <li>
+       <code>Dream.from_path "a%2Fb"</code> becomes <code>["a/b"]</code>.
+      </li>
+      <li>
+       <code>Dream.from_path "a//b"</code> becomes <code>["a"; "b"]</code>.
+      </li>
+     </ul>
+     <p>
+      This function is not for use on targets, because it does not treat <code>?</code> specially. See <a href="#val-from_target"><code>Dream.from_target</code></a> if the argument string is actually a target, and may include a query string.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-drop_trailing_slash">
+     <div class="backing"></div>
+     <a href="#val-drop_trailing_slash" class="anchor"></a><code><span><span class="keyword">val</span> drop_trailing_slash : <span><span>string list</span> <span class="arrow">-&gt;</span></span> <span>string list</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Changes the representation of path <code>abc/</code> to the representation of <code>abc</code> by checking if the last element in the list is <code>""</code>, and, if it is, dropping it.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-text_html">
+     <div class="backing"></div>
+     <a href="#val-text_html" class="anchor"></a><code><span><span class="keyword">val</span> text_html : string</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      The string <code>"text/html; charset=utf-8"</code> for <code>Content-Type:</code> headers.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-application_json">
+     <div class="backing"></div>
+     <a href="#val-application_json" class="anchor"></a><code><span><span class="keyword">val</span> application_json : string</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      The string <code>"application/json"</code> for <code>Content-Type:</code> headers.
+     </p>
+    </div>
+   </div>
+   <h2 id="cryptography">
+    <div class="backing"></div>
+    <a href="#cryptography" class="anchor"></a>Cryptography
+   </h2>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-random">
+     <div class="backing"></div>
+     <a href="#val-random" class="anchor"></a><code><span><span class="keyword">val</span> random : <span>int <span class="arrow">-&gt;</span></span> string</span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Generates the requested number of bytes using a <a href="https://github.com/mirage/mirage-crypto">cryptographically secure random number generator</a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-encrypt">
+     <div class="backing"></div>
+     <a href="#val-encrypt" class="anchor"></a>
+<pre><span class="keyword">val</span> encrypt :
+  ?associated_data:string -&gt;
+    <a href="#type-request">request</a> -&gt; string -&gt; string
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Signs and encrypts the string using the <code>~secret</code> in the request. See <a href="#val-run"><code>Dream.run</code></a> for setting <code>~secret</code>.
+     </p>
+     <p>
+      <code>~associated_data</code> is included when computing the signature, but not included in the ciphertext. It can be used like a “salt,” to force ciphertexts from different contexts to be distinct, and dependent on the context.
+     </p>
+     <p>
+      For example, when <a href="#val-set_cookie"><code>Dream.set_cookie</code></a> encrypts cookie values, it internally passes the cookie names in the associated data. This makes it impossible (or impractical) to use the ciphertext from one cookie as the value of another. The associated data will not match, and the value will be recognized as invalid.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-decrypt">
+     <div class="backing"></div>
+     <a href="#val-decrypt" class="anchor"></a>
+<pre><span class="keyword">val</span> decrypt :
+  ?associated_data:string -&gt;
+    <a href="#type-request">request</a> -&gt; string -&gt; string option
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Reverses <a href="#val-encrypt"><code>Dream.encrypt</code></a>.
+     </p>
+     <p>
+      To support secret rotation, the decryption secrets with which decryption is attempted are are <code>(~secret)::(~old_secrets)</code>. See the descriptions of <code>~secret</code> and <code>~old_secrets</code> in <a href="#val-run"><code>Dream.run</code></a>.
+     </p>
+    </div>
+   </div>
+   <h2 id="variables">
+    <div class="backing"></div>
+    <a href="#variables" class="anchor"></a>Variables
+   </h2>
+   <p>
+    Dream provides two variable scopes for use by middlewares.
+   </p>
+   <div class="odoc-spec">
+    <div class="spec type" id="type-local">
+     <div class="backing"></div>
+     <a href="#type-local" class="anchor"></a><code><span><span class="keyword">type</span> <span>'a local</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Per-message variable.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec type" id="type-global">
+     <div class="backing"></div>
+     <a href="#type-global" class="anchor"></a><code><span><span class="keyword">type</span> <span>'a global</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Per-server variable.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-new_local">
+     <div class="backing"></div>
+     <a href="#val-new_local" class="anchor"></a>
+<pre><span class="keyword">val</span> new_local :
+  ?name:string -&gt;
+  ?show_value:('a -&gt; string) -&gt;
+    unit -&gt; 'a <a href="#type-local">local</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Declares a variable of type <code>'a</code> in all messages. The variable is initially unset in each message. The optional <code>~name</code> and <code>~show_value</code> are used by <a href="#val-run"><code>Dream.run</code></a> <code>~debug</code> to show the variable in debug dumps.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-local">
+     <div class="backing"></div>
+     <a href="#val-local" class="anchor"></a><code><span><span class="keyword">val</span> local : <span><span><span class="type-var">'a</span> <a href="#type-local">local</a></span> <span class="arrow">-&gt;</span></span> <span><span><span class="type-var">'b</span> <a href="#type-message">message</a></span> <span class="arrow">-&gt;</span></span> <span><span class="type-var">'a</span> option</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Retrieves the value of the per-message variable.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-with_local">
+     <div class="backing"></div>
+     <a href="#val-with_local" class="anchor"></a><code><span><span class="keyword">val</span> with_local : <span><span><span class="type-var">'a</span> <a href="#type-local">local</a></span> <span class="arrow">-&gt;</span></span> <span><span class="type-var">'a</span> <span class="arrow">-&gt;</span></span> <span><span><span class="type-var">'b</span> <a href="#type-message">message</a></span> <span class="arrow">-&gt;</span></span> <span><span class="type-var">'b</span> <a href="#type-message">message</a></span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Sets the per-message variable to the value.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-new_global">
+     <div class="backing"></div>
+     <a href="#val-new_global" class="anchor"></a>
+<pre><span class="keyword">val</span> new_global :
+  ?name:string -&gt;
+  ?show_value:('a -&gt; string) -&gt;
+    (unit -&gt; 'a) -&gt; 'a <a href="#type-global">global</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Declares a variable of type <code>'a</code> in all servers. The first time the variable is accessed, the given initializer function is called to get its value. Global variables cannot be changed. So, they are typically refs or other mutable data structures, such as hash tables.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-global">
+     <div class="backing"></div>
+     <a href="#val-global" class="anchor"></a><code><span><span class="keyword">val</span> global : <span><span><span class="type-var">'a</span> <a href="#type-global">global</a></span> <span class="arrow">-&gt;</span></span> <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> <span class="type-var">'a</span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Retrieves the value of the per-server variable.
+     </p>
+    </div>
+   </div>
+   <h2 id="testing">
+    <div class="backing"></div>
+    <a href="#testing" class="anchor"></a>Testing
+   </h2>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-request">
+     <div class="backing"></div>
+     <a href="#val-request" class="anchor"></a>
+<pre><span class="keyword">val</span> request :
+  <span class="optional">?client:string -&gt;
+  ?method_:<a href="#type-method_">method_</a> -&gt;
+  ?target:string -&gt;
+  ?version:int * int -&gt;
+  ?headers:(string * string) list -&gt;</span>
+    string -&gt; <a href="#type-request">request</a>
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      <code>Dream.request body</code> creates a fresh request with the given body for testing. The optional arguments set the corresponding <a href="#requests">request fields</a>.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-test">
+     <div class="backing"></div>
+     <a href="#val-test" class="anchor"></a><code><span><span class="keyword">val</span> test : <span>?prefix:string <span class="arrow">-&gt;</span></span> <span><a href="#type-handler">handler</a> <span class="arrow">-&gt;</span></span> <span><a href="#type-request">request</a> <span class="arrow">-&gt;</span></span> <a href="#type-response">response</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      <code>Dream.test handler</code> runs a handler the same way the HTTP server (<a href="#val-run"><code>Dream.run</code></a>) would — assigning it a request id and noting the site root prefix, which is used by routers. <code>Dream.test</code> calls <a href="https://ocsigen.org/lwt/latest/api/Lwt_main#VALrun"><code>Lwt_main.run</code></a> internally to await the response, which is why the response returned from the test is not wrapped in a promise. If you don't need these facilities, you can test <code>handler</code> by calling it directly with a request.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-first">
+     <div class="backing"></div>
+     <a href="#val-first" class="anchor"></a><code><span><span class="keyword">val</span> first : <span><span><span class="type-var">'a</span> <a href="#type-message">message</a></span> <span class="arrow">-&gt;</span></span> <span><span class="type-var">'a</span> <a href="#type-message">message</a></span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      <code>Dream.first message</code> evaluates to the original request or response that <code>message</code> is immutably derived from. This is useful for getting the original state of requests especially, when they were first created inside the HTTP server (<a href="#val-run"><code>Dream.run</code></a>).
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-last">
+     <div class="backing"></div>
+     <a href="#val-last" class="anchor"></a><code><span><span class="keyword">val</span> last : <span><span><span class="type-var">'a</span> <a href="#type-message">message</a></span> <span class="arrow">-&gt;</span></span> <span><span class="type-var">'a</span> <a href="#type-message">message</a></span></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      <code>Dream.last message</code> evaluates to the latest request or response that was derived from <code>message</code>. This is most useful for obtaining the state of requests at the time an exception was raised, without having to instrument the latest version of the request before the exception.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="multiline spec value" id="val-sort_headers">
+     <div class="backing"></div>
+     <a href="#val-sort_headers" class="anchor"></a>
+<pre><span class="keyword">val</span> sort_headers :
+  (string * string) list -&gt; (string * string) list
+</pre>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Sorts headers by name. Headers with the same name are not sorted by value or otherwise reordered, because order is significant for some headers. See <a href="https://tools.ietf.org/html/rfc7230#section-3.2.2">RFC 7230 §3.2.2</a> on header order. This function can help sanitize output before comparison.
+     </p>
+    </div>
+   </div>
+   <div class="odoc-spec">
+    <div class="spec value" id="val-echo">
+     <div class="backing"></div>
+     <a href="#val-echo" class="anchor"></a><code><span><span class="keyword">val</span> echo : <a href="#type-handler">handler</a></span></code>
+    </div>
+    <div class="spec-doc">
+     <p>
+      Responds with the request body.
+     </p>
+    </div>
+   </div>
+  </div>
+  <footer>
+   Copyright © 2021 Anton Bachin.
+  <br>
+  Released under the MIT license. See
+  <a href="https://github.com/aantron/dream/blob/master/LICENSE.md">
+    LICENSE.md
+  </a>
+  </footer>
+ </body>
+</html>
